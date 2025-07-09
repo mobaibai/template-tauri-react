@@ -1,0 +1,109 @@
+/*
+A Pac-Man loader created with a single element.
+
+Customizations:
+--time [time]: speed of the animation (higher value = slower animation)
+--pacman [color]: color of the Pac-Man
+--dots [color]: color of the dots
+--dotssize [length]: the size of the dots that Pac-Man eats
+--size [integer]: how wide the loader will be (range: 2-10)
+*/
+.pacman-loader {
+  --dotssize: 0.4em;
+  width: 2em;
+  aspect-ratio: clamp(2, var(--size, 3), 10);
+  background-image: radial-gradient(closest-side circle, var(--dots, #fff) 35%, #fff0 0);
+  background-size: var(--dotssize, 0.4em) 100%;
+  background-position: var(--dotssize, 0.4em) 50%;
+  animation: move var(--time, 0.4s) linear infinite;
+  /* the mask helps two purposes: fade in the dots on the right side, and hide them on the left side */
+  mask:
+    radial-gradient(farthest-side circle, #fff 99.9%, #fff0) 0 0 / calc(2em / var(--size, 3)) 100%
+      no-repeat,
+    linear-gradient(90deg, #0000 calc(1em / var(--size, 3)), #000 0 75%, #0000 95%);
+  position: relative;
+  /* hide the text using text-indent and hiding overflow */
+  overflow: clip;
+  text-indent: 2em;
+  user-select: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    height: 50%;
+    aspect-ratio: 2;
+    border-radius: 50% / 100% 100% 0 0;
+    background: var(--pacman, #fe5);
+    transform-origin: 50% 100%;
+    transform: rotate(-40deg);
+    animation: mouth var(--time, 0.4s) linear infinite alternate;
+  }
+
+  &::after {
+    bottom: 0;
+    border-radius: 50% / 0 0 100% 100%;
+    transform-origin: 50% 0;
+    transform: rotate(40deg);
+  }
+}
+
+/* reduced motion: don't animate the dots, just pacman */
+@media (prefers-reduced-motion) {
+  .pacman-loader {
+    --time: 4s;
+  }
+}
+
+/* high-contrast mode: make pacman visible with system color */
+@media (prefers-contrast: more) {
+  .pacman-loader {
+    &::before,
+    &::after {
+      background: highlight;
+    }
+  }
+}
+
+@keyframes mouth {
+  to {
+    transform: rotate(0);
+  }
+}
+
+@keyframes move {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@property --time {
+  syntax: '<time>';
+  inherits: true;
+  initial-value: 0.4s;
+}
+
+@property --pacman {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fe5;
+}
+
+@property --dots {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fff;
+}
+
+@property --dotssize {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 30px;
+}
+
+@property --size {
+  syntax: '<integer>';
+  inherits: true;
+  initial-value: 3;
+}

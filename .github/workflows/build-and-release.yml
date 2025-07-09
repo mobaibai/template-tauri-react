@@ -1,0 +1,612 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'draft'
+        type: choice
+        options:
+          - draft
+          - prerelease
+          - release
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # 前端构建和测试
+  frontend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '>=10.0.0'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run TypeScript check
+        run: pnpm run type-check
+
+      - name: Run ESLint
+        run: pnpm run lint
+
+      - name: Check code formatting
+        run: pnpm run format:check
+
+      - name: Build frontend
+        run: pnpm run build
+
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 1
+
+  # macOS 构建
+  build-macos:
+    needs: frontend-test
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64-apple-darwin, aarch64-apple-darwin]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '>=10.0.0'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Build Tauri app
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
+            pnpm run build:mac-x86
+          else
+            pnpm run build:mac-aarch
+          fi
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.target }}
+          path: dist-builds/
+          retention-days: 3
+
+  # Windows 构建
+  build-windows:
+    needs: frontend-test
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '>=10.0.0'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cargo-xwin
+        run: cargo install cargo-xwin
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Build Tauri app
+        run: |
+          if ("${{ matrix.target }}" -eq "x86_64-pc-windows-msvc") {
+            pnpm run build:win-x86
+          } else {
+            pnpm run build:win-aarch
+          }
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.target }}
+          path: dist-builds/
+          retention-days: 3
+
+  # Linux 构建
+  build-linux:
+    needs: frontend-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '>=10.0.0'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+          fi
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Build Tauri app
+        run: |
+          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
+            pnpm run build:linux-x86
+          else
+            pnpm run build:linux-aarch
+          fi
+        env:
+          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
+          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
+          AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
+          STRIP_aarch64_unknown_linux_gnu: aarch64-linux-gnu-strip
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.target }}
+          path: dist-builds/
+          retention-days: 3
+
+  # iOS 构建 (仅在 macOS 上)
+  build-ios:
+    needs: frontend-test
+    runs-on: macos-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.ref, 'mobile')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '>=10.0.0'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Initialize iOS project
+        run: pnpm run init:ios
+
+      - name: Build iOS app
+        run: pnpm run build:ios
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: dist-builds/
+          retention-days: 3
+
+  # Android 构建
+  build-android:
+    needs: frontend-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.ref, 'mobile')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '>=10.0.0'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;25.1.8937393"
+          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393" >> $GITHUB_ENV
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download frontend artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Initialize Android project
+        run: pnpm run init:android
+
+      - name: Build Android app
+        run: pnpm run build:android
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: dist-builds/
+          retention-days: 3
+
+  # 创建 Release
+  create-release:
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=$(date +%Y%m%d-%H%M%S)
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name || format('v{0}', steps.get_version.outputs.VERSION) }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 🚀 Release ${{ steps.get_version.outputs.VERSION }}
+
+            ### 📦 下载链接
+
+            #### 桌面版本
+            - **macOS**: 支持 Intel (x86_64) 和 Apple Silicon (ARM64)
+            - **Windows**: 支持 x86_64 和 ARM64
+            - **Linux**: 支持 x86_64 和 ARM64 (AppImage, DEB, RPM)
+
+            #### 移动版本 (如果可用)
+            - **iOS**: 需要 iOS 13.0 或更高版本
+            - **Android**: 需要 Android 7.0 (API 24) 或更高版本
+
+            ### 🔧 安装说明
+
+            #### macOS
+            1. 下载对应架构的 `.dmg` 文件
+            2. 双击打开并拖拽到应用程序文件夹
+            3. 首次运行可能需要在系统偏好设置中允许
+
+            #### Windows
+            1. 下载对应架构的 `.exe` 安装程序
+            2. 运行安装程序并按提示操作
+            3. Windows Defender 可能会显示警告，选择"仍要运行"
+
+            #### Linux
+            - **AppImage**: 下载后添加执行权限 `chmod +x *.AppImage`
+            - **DEB**: 使用 `sudo dpkg -i *.deb` 安装
+            - **RPM**: 使用 `sudo rpm -i *.rpm` 安装
+
+            ### 📱 移动端
+            - **iOS**: 需要通过 TestFlight 或企业分发安装
+            - **Android**: 下载 APK 文件并允许未知来源安装
+
+            ---
+
+            **完整更新日志**: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          draft: ${{ github.event.inputs.release_type == 'draft' || github.event_name != 'workflow_dispatch' }}
+          prerelease: ${{ github.event.inputs.release_type == 'prerelease' }}
+
+  # 上传构建产物到 Release
+  upload-release-assets:
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - artifact: macos-x86_64-apple-darwin
+            pattern: '*.dmg'
+            name: 'macOS-Intel'
+          - artifact: macos-aarch64-apple-darwin
+            pattern: '*.dmg'
+            name: 'macOS-AppleSilicon'
+          - artifact: windows-x86_64-pc-windows-msvc
+            pattern: '*.exe'
+            name: 'Windows-x64'
+          - artifact: windows-aarch64-pc-windows-msvc
+            pattern: '*.exe'
+            name: 'Windows-ARM64'
+          - artifact: linux-x86_64-unknown-linux-gnu
+            pattern: '*.{AppImage,deb,rpm}'
+            name: 'Linux-x64'
+          - artifact: linux-aarch64-unknown-linux-gnu
+            pattern: '*.{AppImage,deb,rpm}'
+            name: 'Linux-ARM64'
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./release-assets/
+
+      - name: Upload Release Assets
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const glob = require('glob');
+
+            const releaseId = '${{ needs.create-release.outputs.release_id }}';
+            const artifactPath = './release-assets/';
+
+            // 查找所有匹配的文件
+            const files = glob.sync('${{ matrix.pattern }}', { cwd: artifactPath });
+
+            for (const file of files) {
+              const filePath = path.join(artifactPath, file);
+              const fileName = path.basename(file);
+              const fileData = fs.readFileSync(filePath);
+              
+              // 生成带平台标识的文件名
+              const ext = path.extname(fileName);
+              const baseName = path.basename(fileName, ext);
+              const newFileName = `${baseName}-${{ matrix.name }}${ext}`;
+              
+              console.log(`Uploading ${newFileName}...`);
+              
+              await github.rest.repos.uploadReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: releaseId,
+                name: newFileName,
+                data: fileData,
+              });
+            }
+
+  # 上传移动端构建产物 (如果存在)
+  upload-mobile-assets:
+    needs: [create-release, build-ios, build-android]
+    runs-on: ubuntu-latest
+    if: always() && (needs.build-ios.result == 'success' || needs.build-android.result == 'success')
+    steps:
+      - name: Download iOS artifacts
+        if: needs.build-ios.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-build
+          path: ./ios-assets/
+
+      - name: Download Android artifacts
+        if: needs.build-android.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: android-build
+          path: ./android-assets/
+
+      - name: Upload Mobile Assets
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const glob = require('glob');
+
+            const releaseId = '${{ needs.create-release.outputs.release_id }}';
+
+            // 上传 iOS 文件
+            if (fs.existsSync('./ios-assets/')) {
+              const iosFiles = glob.sync('*.{ipa,app}', { cwd: './ios-assets/' });
+              for (const file of iosFiles) {
+                const filePath = path.join('./ios-assets/', file);
+                const fileName = path.basename(file);
+                const fileData = fs.readFileSync(filePath);
+                
+                console.log(`Uploading iOS ${fileName}...`);
+                
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: releaseId,
+                  name: `iOS-${fileName}`,
+                  data: fileData,
+                });
+              }
+            }
+
+            // 上传 Android 文件
+            if (fs.existsSync('./android-assets/')) {
+              const androidFiles = glob.sync('*.apk', { cwd: './android-assets/' });
+              for (const file of androidFiles) {
+                const filePath = path.join('./android-assets/', file);
+                const fileName = path.basename(file);
+                const fileData = fs.readFileSync(filePath);
+                
+                console.log(`Uploading Android ${fileName}...`);
+                
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: releaseId,
+                  name: `Android-${fileName}`,
+                  data: fileData,
+                });
+              }
+            }
+
+  # 清理工作流产物
+  cleanup:
+    needs: [upload-release-assets, upload-mobile-assets]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Delete workflow artifacts
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+
+            for (const artifact of artifacts.data.artifacts) {
+              console.log(`Deleting artifact: ${artifact.name}`);
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+            }

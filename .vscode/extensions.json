@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    // Tauri 和 Rust 相关
+    "tauri-apps.tauri-vscode",
+    "rust-lang.rust-analyzer",
+    
+    // 代码格式化
+    "esbenp.prettier-vscode",
+    
+    // TypeScript 和 React 开发
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "dsznajder.es7-react-js-snippets",
+    
+    // 代码质量
+    "dbaeumer.vscode-eslint",
+    "streetsidesoftware.code-spell-checker",
+    
+    // 开发体验
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-css-peek"
+  ]
+}

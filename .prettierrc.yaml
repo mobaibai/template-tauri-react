@@ -1,0 +1,63 @@
+# Prettier 配置文件
+# 基本格式化选项
+semi: false # 不使用分号
+singleQuote: true # 使用单引号
+trailingComma: 'es5' # 在 ES5 中有效的尾随逗号
+tabWidth: 2 # 缩进宽度
+useTabs: false # 使用空格而不是制表符
+printWidth: 100 # 每行最大字符数
+endOfLine: 'lf' # 换行符类型
+bracketSpacing: true # 对象字面量的大括号间添加空格
+bracketSameLine: false # 将多行 HTML 元素的 > 放在下一行
+arrowParens: 'avoid' # 箭头函数参数周围的括号
+
+# 插件配置
+plugins:
+  - '@trivago/prettier-plugin-sort-imports'
+
+# 导入排序配置
+importOrder:
+  - '^react$'
+  - '^react-dom$'
+  - '^react-router-dom$'
+  - '^@react'
+  - '^@tauri-apps'
+  - '^@ant-design'
+  - '^antd'
+  - '^@/'
+  - '^[./]'
+  - '^[./].*\\.(css|scss|sass)$'
+importOrderSeparation: true
+importOrderSortSpecifiers: true
+importOrderCaseInsensitive: true
+importOrderParserPlugins: ['typescript', 'jsx', 'decorators-legacy']
+importOrderGroupNamespaceSpecifiers: true
+
+# 文件覆盖配置
+overrides:
+  # TypeScript/JavaScript 文件
+  - files: '*.{js,jsx,ts,tsx}'
+    options:
+      parser: 'typescript'
+
+  # JSON 文件
+  - files: '*.json'
+    options:
+      parser: 'json'
+
+  # CSS/SCSS 文件
+  - files: '*.{css,scss,sass}'
+    options:
+      parser: 'css'
+
+  # HTML 文件
+  - files: '*.html'
+    options:
+      parser: 'html'
+
+  # Markdown 文件
+  - files: '*.md'
+    options:
+      parser: 'markdown'
+      printWidth: 80
+      proseWrap: 'always'
