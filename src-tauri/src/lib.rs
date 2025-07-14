@@ -90,7 +90,7 @@ async fn update_window_title(app: AppHandle, title: String) -> Result<(), String
         main_window
             .set_title(&title)
             .map_err(|e| format!("Failed to set window title: {}", e))?;
-        
+
         #[cfg(mobile)]
         {
             // 移动平台可能不支持动态标题更新
@@ -155,8 +155,6 @@ pub fn run() {
             // 系统信息相关
             handlers::get_system_info,
             handlers::get_version_info,
-            handlers::get_mac_address,
-            handlers::get_network_info,
             handlers::get_disk_info,
             // 文件操作相关
             handlers::get_file_path,
@@ -197,8 +195,6 @@ pub fn run() {
             // 系统信息相关
             handlers::get_system_info,
             handlers::get_version_info,
-            handlers::get_mac_address,
-            handlers::get_network_info,
             handlers::get_disk_info,
             // 文件操作相关
             handlers::get_file_path,

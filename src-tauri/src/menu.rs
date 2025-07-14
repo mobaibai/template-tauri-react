@@ -151,7 +151,7 @@ pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) {
             // 显示系统弹窗
             if let Some(_window) = app.get_webview_window("main") {
                 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
-                let dialog_message = format!("template-tauri-react脚手架\n\n{}", system_info);
+                let dialog_message = format!("template-tauri-react脚手架\n\n{system_info}");
 
                 // 使用自定义按钮对话框
                 app.dialog()
@@ -168,7 +168,7 @@ pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) {
                             if let Err(e) =
                                 open::that("https://github.com/mobaibai/template-tauri-react")
                             {
-                                eprintln!("Failed to open URL: {}", e);
+                                eprintln!("Failed to open URL: {e}");
                             }
                         }
                         // 如果result为false，用户点击了"确认"按钮，什么都不做
@@ -179,12 +179,12 @@ pub fn handle_menu_event(app: &AppHandle, event: &MenuEvent) {
             #[cfg(debug_assertions)]
             {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.open_devtools();
+                    window.open_devtools();
                 }
             }
         }
         _ => {
-            println!("未处理的菜单事件: {}", menu_id);
+            println!("未处理的菜单事件: {menu_id}");
         }
     }
 }

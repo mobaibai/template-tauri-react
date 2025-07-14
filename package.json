@@ -214,7 +214,8 @@
     "react-dom": ">=19.0.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,scss,md,yml,yaml}": ["prettier --write"]
+    "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,css,scss,md,yml,yaml}": ["prettier --write"]
   },
   "browserslist": {
     "production": [">0.2%", "not dead", "not op_mini all"],
