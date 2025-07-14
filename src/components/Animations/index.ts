@@ -1,11 +1,17 @@
 // 动画组件统一导出
 export { AnimationContainer } from './AnimationContainer'
 export { AnimationOpacity } from './AnimationOpacity'
-export { AnimationRotate, useRotateAnimation } from './AnimationRotate'
-export { AnimationScale, useScaleAnimation } from './AnimationScale'
-export { AnimationSequence, useAnimationSequence } from './AnimationSequence'
-export { AnimationSlide, useSlideAnimation } from './AnimationSlide'
+export { AnimationRotate } from './AnimationRotate'
+export { AnimationScale } from './AnimationScale'
+export { AnimationSequence } from './AnimationSequence'
+export { AnimationSlide } from './AnimationSlide'
 export { AnimationSpring } from './AnimationSpring'
+
+// 动画 Hooks 从专门的 hooks 目录导入
+export { useRotateAnimation } from '@/hooks/animation/useRotateAnimation'
+export { useScaleAnimation } from '@/hooks/animation/useScaleAnimation'
+export { useAnimationSequence } from '@/hooks/animation/useAnimationSequence'
+export { useSlideAnimation } from '@/hooks/animation/useSlideAnimation'
 
 // 动画工具函数
 export {
