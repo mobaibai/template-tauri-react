@@ -97,7 +97,7 @@ pub async fn get_system_info() -> Result<Vec<SystemInfo>, String> {
         SystemInfo {
             key: "total_memory".to_string(),
             name: "总内存".to_string(),
-            value: serde_json::Value::String(format!("{} GB", total_memory_gb)),
+            value: serde_json::Value::String(format!("{total_memory_gb} GB")),
         },
     ];
 
@@ -179,7 +179,7 @@ pub async fn get_disk_info() -> Result<DiskInfo, String> {
             let stdout = String::from_utf8_lossy(&output.stdout);
             parse_disk_info(&stdout)
         }
-        Err(e) => Err(format!("获取硬盘信息失败: {}", e)),
+        Err(e) => Err(format!("获取硬盘信息失败: {e}")),
     }
 }
 
@@ -241,7 +241,7 @@ pub async fn get_file_path(app: AppHandle) -> Result<Option<String>, String> {
             }
         });
 
-    let file_path = rx.recv().map_err(|e| format!("接收文件路径失败: {}", e))?;
+    let file_path = rx.recv().map_err(|e| format!("接收文件路径失败: {e}"))?;
     Ok(file_path.map(|file_path| match file_path {
         tauri_plugin_dialog::FilePath::Path(path) => path.display().to_string(),
         tauri_plugin_dialog::FilePath::Url(url) => url.to_string(),
@@ -267,7 +267,7 @@ pub async fn get_directory_path(app: AppHandle) -> Result<Option<String>, String
             }
         });
 
-        let dir_path = rx.recv().map_err(|e| format!("接收目录路径失败: {}", e))?;
+        let dir_path = rx.recv().map_err(|e| format!("接收目录路径失败: {e}"))?;
         Ok(dir_path.map(|dir_path| match dir_path {
             tauri_plugin_dialog::FilePath::Path(path) => path.display().to_string(),
             tauri_plugin_dialog::FilePath::Url(url) => url.to_string(),
@@ -291,7 +291,7 @@ pub async fn open_window(app: AppHandle, path: String) -> Result<(), String> {
     let _window = tauri::WebviewWindowBuilder::new(
         &app,
         "child_window",
-        tauri::WebviewUrl::App(format!("#{}", path).into()),
+        tauri::WebviewUrl::App(format!("#{path}").into()),
     )
     .title("子窗口")
     .inner_size(900.0, 720.0)
@@ -299,16 +299,16 @@ pub async fn open_window(app: AppHandle, path: String) -> Result<(), String> {
     .resizable(false)
     .visible(true)
     .build()
-    .map_err(|e| format!("创建窗口失败: {}", e))?;
+    .map_err(|e| format!("创建窗口失败: {e}"))?;
 
     #[cfg(mobile)]
     let _window = tauri::WebviewWindowBuilder::new(
         &app,
         "child_window",
-        tauri::WebviewUrl::App(format!("#{}", path).into()),
+        tauri::WebviewUrl::App(format!("#{path}").into()),
     )
     .build()
-    .map_err(|e| format!("创建窗口失败: {}", e))?;
+    .map_err(|e| format!("创建窗口失败: {e}"))?;
 
     Ok(())
 }
@@ -372,7 +372,7 @@ async fn make_http_request(
         .timeout(std::time::Duration::from_millis(timeout))
         .user_agent("Tauri-App/1.0.0")
         .build()
-        .map_err(|e| format!("创建 HTTP 客户端失败: {}", e))?;
+        .map_err(|e| format!("创建 HTTP 客户端失败: {e}"))?;
 
     let mut request_builder = match method.to_uppercase().as_str() {
         "GET" => client.get(&url),
@@ -380,7 +380,7 @@ async fn make_http_request(
         "PUT" => client.put(&url),
         "DELETE" => client.delete(&url),
         "PATCH" => client.patch(&url),
-        _ => return Err(format!("不支持的 HTTP 方法: {}", method)),
+        _ => return Err(format!("不支持的 HTTP 方法: {method}")),
     };
 
     // 添加自定义头部
@@ -401,7 +401,7 @@ async fn make_http_request(
     let response = request_builder
         .send()
         .await
-        .map_err(|e| format!("HTTP 请求失败: {}", e))?;
+        .map_err(|e| format!("HTTP 请求失败: {e}"))?;
 
     let status = response.status().as_u16();
     let status_text = response
@@ -426,14 +426,14 @@ async fn make_http_request(
                 let bytes = response
                     .bytes()
                     .await
-                    .map_err(|e| format!("读取响应数据失败: {}", e))?;
+                    .map_err(|e| format!("读取响应数据失败: {e}"))?;
                 serde_json::Value::String(general_purpose::STANDARD.encode(bytes))
             }
             Some("base64") => {
                 let bytes = response
                     .bytes()
                     .await
-                    .map_err(|e| format!("读取响应数据失败: {}", e))?;
+                    .map_err(|e| format!("读取响应数据失败: {e}"))?;
                 serde_json::Value::String(general_purpose::STANDARD.encode(bytes))
             }
             _ => {
@@ -441,7 +441,7 @@ async fn make_http_request(
                 let text = response
                     .text()
                     .await
-                    .map_err(|e| format!("读取响应文本失败: {}", e))?;
+                    .map_err(|e| format!("读取响应文本失败: {e}"))?;
 
                 match serde_json::from_str::<serde_json::Value>(&text) {
                     Ok(json) => json,
@@ -454,7 +454,7 @@ async fn make_http_request(
         let text = response
             .text()
             .await
-            .map_err(|e| format!("读取响应文本失败: {}", e))?;
+            .map_err(|e| format!("读取响应文本失败: {e}"))?;
 
         match serde_json::from_str::<serde_json::Value>(&text) {
             Ok(json) => json,

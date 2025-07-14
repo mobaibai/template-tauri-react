@@ -8,7 +8,7 @@ use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+    format!("Hello, {name}! You've been greeted from Rust!")
 }
 
 /// 创建 Loading 窗口（不显示）
@@ -25,13 +25,13 @@ async fn create_loading_window(app: AppHandle) -> Result<(), String> {
             .always_on_top(true)
             .visible(false) // 创建时不显示
             .build()
-            .map_err(|e| format!("Failed to create loading window: {}", e))?;
+            .map_err(|e| format!("Failed to create loading window: {e}"))?;
 
     #[cfg(mobile)]
     let _loading_window =
         WebviewWindowBuilder::new(&app, "loading", WebviewUrl::App("#/start-loading".into()))
             .build()
-            .map_err(|e| format!("Failed to create loading window: {}", e))?;
+            .map_err(|e| format!("Failed to create loading window: {e}"))?;
 
     Ok(())
 }
@@ -44,7 +44,7 @@ async fn notify_loading_ready(app: AppHandle) -> Result<(), String> {
         #[cfg(desktop)]
         _loading_window
             .show()
-            .map_err(|e| format!("Failed to show loading window: {}", e))?;
+            .map_err(|e| format!("Failed to show loading window: {e}"))?;
 
         #[cfg(mobile)]
         {
@@ -58,14 +58,14 @@ async fn notify_loading_ready(app: AppHandle) -> Result<(), String> {
 
             // 创建主窗口
             if let Err(e) = create_main_window(app_handle.clone()).await {
-                eprintln!("Failed to create main window: {}", e);
+                eprintln!("Failed to create main window: {e}");
             }
 
             // 关闭 loading 窗口
             if let Some(loading_win) = app_handle.get_webview_window("loading") {
                 #[cfg(desktop)]
                 if let Err(e) = loading_win.close() {
-                    eprintln!("Failed to close loading window: {}", e);
+                    eprintln!("Failed to close loading window: {e}");
                 }
 
                 #[cfg(mobile)]
@@ -89,7 +89,7 @@ async fn update_window_title(app: AppHandle, title: String) -> Result<(), String
         #[cfg(desktop)]
         main_window
             .set_title(&title)
-            .map_err(|e| format!("Failed to set window title: {}", e))?;
+            .map_err(|e| format!("Failed to set window title: {e}"))?;
 
         #[cfg(mobile)]
         {
@@ -116,7 +116,7 @@ async fn create_main_window(app: AppHandle) -> Result<(), String> {
             .resizable(true)
             .visible(true)
             .build()
-            .map_err(|e| format!("Failed to create main window: {}", e))?;
+            .map_err(|e| format!("Failed to create main window: {e}"))?;
 
         #[cfg(mobile)]
         let _main_window = WebviewWindowBuilder::new(&app, "main", WebviewUrl::App("/".into()))
@@ -144,7 +144,7 @@ pub fn run() {
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 if let Err(e) = create_loading_window(app_handle).await {
-                    eprintln!("Failed to create loading window: {}", e);
+                    eprintln!("Failed to create loading window: {e}");
                 }
             });
 
