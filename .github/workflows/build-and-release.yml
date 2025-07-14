@@ -497,14 +497,14 @@ jobs:
               const filePath = path.join(artifactPath, file);
               const fileName = path.basename(file);
               const fileData = fs.readFileSync(filePath);
-              
+
               // 生成带平台标识的文件名
               const ext = path.extname(fileName);
               const baseName = path.basename(fileName, ext);
               const newFileName = `${baseName}-${{ matrix.name }}${ext}`;
-              
+
               console.log(`Uploading ${newFileName}...`);
-              
+
               await github.rest.repos.uploadReleaseAsset({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -552,9 +552,9 @@ jobs:
                 const filePath = path.join('./ios-assets/', file);
                 const fileName = path.basename(file);
                 const fileData = fs.readFileSync(filePath);
-                
+
                 console.log(`Uploading iOS ${fileName}...`);
-                
+
                 await github.rest.repos.uploadReleaseAsset({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -572,9 +572,9 @@ jobs:
                 const filePath = path.join('./android-assets/', file);
                 const fileName = path.basename(file);
                 const fileData = fs.readFileSync(filePath);
-                
+
                 console.log(`Uploading Android ${fileName}...`);
-                
+
                 await github.rest.repos.uploadReleaseAsset({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
