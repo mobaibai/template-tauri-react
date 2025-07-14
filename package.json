@@ -40,7 +40,12 @@
     "pnpm": ">=10.0.0"
   },
   "main": "dist/index.html",
-  "files": ["dist", "src-tauri/target/release/bundle", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "src-tauri/target/release/bundle",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "========= 启动前端开发服务器(Tauri项目会连带执行不需要单独执行) =========": "",
     "dev": "vite",
@@ -150,8 +155,6 @@
     "test:rust": "cd src-tauri && cargo test",
     "========= 运行Rust Clippy代码检查 =========": "",
     "clippy": "cd src-tauri && cargo clippy -- -D warnings",
-    "========= 安装Git hooks =========": "",
-    "prepare": "husky install",
     "========= 提交前代码检查和格式化 =========": "",
     "precommit": "npm run lint:fix && npm run format && npm run type-check",
     "========= 构建前检查 =========": "",
@@ -198,8 +201,6 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.3.0",
     "prettier": "^3.6.2",
     "sass": "^1.89.2",
     "svgo": "^4.0.0",
@@ -213,12 +214,16 @@
     "react": ">=19.0.0",
     "react-dom": ">=19.0.0"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
-    "*.{json,css,scss,md,yml,yaml}": ["prettier --write"]
-  },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

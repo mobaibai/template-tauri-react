@@ -88,3 +88,5 @@ export const useAjax = (options?: Options) => {
   }
   return ajax
 }
+
+export default useAjax
