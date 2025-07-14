@@ -65,12 +65,13 @@ export const useResize = (options: ResizeType = {}) => {
 
   useEffect(() => {
     resize()
-    window.addEventListener('resize', resizeDelay.current)
+    const currentResizeHandler = resizeDelay.current
+    window.addEventListener('resize', currentResizeHandler)
 
     return () => {
-      window.removeEventListener('resize', resizeDelay.current)
+      window.removeEventListener('resize', currentResizeHandler)
     }
-  }, [])
+  }, [resize])
 
   return {
     scale,

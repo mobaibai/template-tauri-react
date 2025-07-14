@@ -7,7 +7,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { Button, Skeleton } from 'antd'
 
 import { AnimationOpacity, AnimationScale } from '@/components/Animations'
-import { useTitle } from '@/hooks/useTitle'
+import { useTitleSafe } from '@/hooks/useTitleSafe'
 import { useCountStore } from '@/stores/useCountStore'
 
 import SystemInfoCard from './SystemInfoCard'
@@ -16,7 +16,7 @@ interface Props {
   title?: string
 }
 export const Home: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitleSafe(props.title)
 
   const { inc, cut, count } = useCountStore()
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)

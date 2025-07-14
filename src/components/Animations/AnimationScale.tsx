@@ -246,48 +246,6 @@ export const AnimationScale: React.FC<AnimationScaleProps> = ({
   )
 }
 
-// 导出一个控制器 Hook，用于手动控制缩放动画
-export const useScaleAnimation = () => {
-  const [styles, api] = useSpring(() => ({
-    transform: 'scale(1)',
-    opacity: 1,
-  }))
-
-  const scaleIn = useCallback(
-    (fromScale = 0, toScale = 1, config?: any) => {
-      api.set({ transform: `scale(${fromScale})`, opacity: 0 })
-      return api.start({
-        transform: `scale(${toScale})`,
-        opacity: 1,
-        config,
-      })
-    },
-    [api]
-  )
-
-  const scaleOut = useCallback(
-    (toScale = 0, config?: any) => {
-      return api.start({
-        transform: `scale(${toScale})`,
-        opacity: 0,
-        config,
-      })
-    },
-    [api]
-  )
-
-  const pulse = useCallback(
-    (scale = 1.1, config?: any) => {
-      return api.start({
-        to: async next => {
-          await next({ transform: `scale(${scale})` })
-          await next({ transform: 'scale(1)' })
-        },
-        config,
-      })
-    },
-    [api]
-  )
-
-  return { styles, scaleIn, scaleOut, pulse, api }
-}
+// 控制器 Hook 已移至 src/hooks/animation/useScaleAnimation.ts
+// 请从那里导入 useScaleAnimation
+export { useScaleAnimation } from '@/hooks/animation/useScaleAnimation'
