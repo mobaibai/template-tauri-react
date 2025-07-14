@@ -1,6 +1,6 @@
 {
   "name": "template-tauri-react",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A modern cross-platform desktop application template built with Tauri 2.0, React 18, TypeScript, and Ant Design. Features system monitoring, 3D rendering, animation system, and comprehensive development tools.",
   "type": "module",
   "private": false,
@@ -40,7 +40,12 @@
     "pnpm": ">=10.0.0"
   },
   "main": "dist/index.html",
-  "files": ["dist", "src-tauri/target/release/bundle", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "src-tauri/target/release/bundle",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "========= 启动前端开发服务器(Tauri项目会连带执行不需要单独执行) =========": "",
     "dev": "vite",
@@ -214,10 +219,20 @@
     "react-dom": ">=19.0.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,scss,md}": ["prettier --write"]
+    "*.{ts,tsx,js,jsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
