@@ -40,12 +40,7 @@
     "pnpm": ">=10.0.0"
   },
   "main": "dist/index.html",
-  "files": [
-    "dist",
-    "src-tauri/target/release/bundle",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "src-tauri/target/release/bundle", "README.md", "LICENSE"],
   "scripts": {
     "========= 启动前端开发服务器(Tauri项目会连带执行不需要单独执行) =========": "",
     "dev": "vite",
@@ -215,15 +210,7 @@
     "react-dom": ">=19.0.0"
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   }
 }

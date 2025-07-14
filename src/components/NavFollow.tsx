@@ -36,7 +36,7 @@ export const NavFollow: React.FC<NavFollowProps<any>> = ({
   const navIndexRef = useRef<number>(0)
   const followItemRef = useRef<HTMLDivElement>(null)
   const navItemRefs = useRef<Array<React.RefObject<HTMLDivElement>>>([])
-  
+
   // 初始化refs数组
   useEffect(() => {
     navItemRefs.current = Array(list.length)
@@ -103,8 +103,6 @@ export const NavFollow: React.FC<NavFollowProps<any>> = ({
     navAssignment()
     onClickNavItemHandler(list[index])
   }
-
-
 
   return (
     <div className="follow-nav-component">
