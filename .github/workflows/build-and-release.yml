@@ -212,6 +212,7 @@ jobs:
   build-linux:
     needs: frontend-test
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
@@ -239,9 +240,9 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libssl-dev
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu
+            sudo apt-get install -y gcc-aarch64-linux-gnu libssl-dev:arm64
           fi
 
       - name: Rust cache
@@ -270,6 +271,11 @@ jobs:
           CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
           AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
           STRIP_aarch64_unknown_linux_gnu: aarch64-linux-gnu-strip
+          PKG_CONFIG_ALLOW_CROSS: 1
+          PKG_CONFIG_PATH_aarch64_unknown_linux_gnu: /usr/lib/aarch64-linux-gnu/pkgconfig
+          OPENSSL_DIR_aarch64_unknown_linux_gnu: /usr
+          OPENSSL_LIB_DIR_aarch64_unknown_linux_gnu: /usr/lib/aarch64-linux-gnu
+          OPENSSL_INCLUDE_DIR_aarch64_unknown_linux_gnu: /usr/include
 
       - name: Create dist-builds directory if not exists
         run: |
