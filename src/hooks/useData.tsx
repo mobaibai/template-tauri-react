@@ -1,7 +1,7 @@
 import type { SWRConfiguration } from 'swr'
 import useSWR from 'swr'
 
-import { useAjax } from '@/lib/ajax'
+import { useAjax } from '@/lib'
 
 interface Props {
   method: 'get' | 'post'

@@ -1,7 +1,7 @@
 import type { SWRConfiguration } from 'swr'
 import useSWR from 'swr'
 
-import { useIpcAjax } from '@/lib/ipc-ajax'
+import { useIpcAjax } from '@/lib'
 import { objectToQueryString } from '@/utils'
 
 interface Props {
@@ -44,7 +44,7 @@ export const useIpcData = ({
       try {
         let res
         switch (method) {
-          case 'GET':
+          case 'GET': {
             // GET 请求需要将参数转换为查询字符串
             const queryString = objectToQueryString(
               typeof params === 'object' && params !== null && !Array.isArray(params) ? params : {}
@@ -52,9 +52,11 @@ export const useIpcData = ({
             const getUrl = queryString ? `${path}?${queryString}` : path
             res = await get<DataType<ResponseDataListType | ItemType>>(getUrl)
             break
-          case 'POST':
+          }
+          case 'POST': {
             res = await post<DataType<ResponseDataListType | ItemType>>(path, params)
             break
+          }
           default:
             throw new Error(`不支持的请求方法: ${method}`)
         }

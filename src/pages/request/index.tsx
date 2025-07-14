@@ -4,7 +4,7 @@ import { Button } from 'antd'
 
 import { useIpcData } from '@/hooks/useIpcData'
 import { useTitle } from '@/hooks/useTitle'
-import { useIpcAjax } from '@/lib/ipc-ajax'
+import { useIpcAjax } from '@/lib'
 
 type Props = {
   title?: string
@@ -15,9 +15,8 @@ type Props = {
  * 演示如何使用类似 useAjax 的方式进行网络请求
  */
 export const RequestPage: React.FC<Props> = props => {
-  if (props.title) {
-    useTitle(props.title)
-  }
+  // 无条件调用Hook
+  useTitle(props.title || 'Request')
 
   const [response, setResponse] = useState<any>(null)
   const [loading, setLoading] = useState(false)
