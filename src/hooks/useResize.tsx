@@ -82,7 +82,7 @@ export const useResize = (options: ResizeType = {}) => {
 /*
 用来返回防抖函数的工具函数
 */
-function debounce(callback: Function, delay: number) {
+function debounce(callback: (event?: Event) => void, delay: number) {
   let timerId: NodeJS.Timeout | null
   return function (event: Event) {
     // 如果上次事件还没有真正处理, 清除
