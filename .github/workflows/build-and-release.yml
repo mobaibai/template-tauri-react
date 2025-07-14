@@ -247,7 +247,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libssl-dev
-          
+
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             echo "=== 安装 aarch64 交叉编译工具链 ==="
             sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
