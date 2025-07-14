@@ -109,6 +109,9 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ matrix.target }}
+          cache-targets: true
+          cache-on-failure: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -175,6 +178,9 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ matrix.target }}
+          cache-targets: true
+          cache-on-failure: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -212,7 +218,7 @@ jobs:
   build-linux:
     needs: frontend-test
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       matrix:
         target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
@@ -241,14 +247,29 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libssl-dev
+          
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu
+            echo "=== 安装 aarch64 交叉编译工具链 ==="
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
+            
+            # 验证工具链安装
+            echo "=== 验证交叉编译工具链 ==="
+            which aarch64-linux-gnu-gcc
+            aarch64-linux-gnu-gcc --version
+            which aarch64-linux-gnu-g++
+            aarch64-linux-gnu-g++ --version
+            
+            # 检查 pkg-config 路径
+            ls -la /usr/lib/aarch64-linux-gnu/pkgconfig/ || echo "aarch64 pkgconfig directory not found"
           fi
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ matrix.target }}
+          cache-targets: true
+          cache-on-failure: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -264,13 +285,25 @@ jobs:
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
             pnpm run build:linux-x86
           else
+            # 为 aarch64 交叉编译设置详细的环境变量
+            export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+            export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+            export AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar
+            export STRIP_aarch64_unknown_linux_gnu=aarch64-linux-gnu-strip
+            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+            export PKG_CONFIG_ALLOW_CROSS=1
+            export PKG_CONFIG_PATH_aarch64_unknown_linux_gnu=/usr/lib/aarch64-linux-gnu/pkgconfig
+            
+            # 调试信息
+            echo "=== 交叉编译环境检查 ==="
+            which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found"
+            aarch64-linux-gnu-gcc --version || echo "aarch64-linux-gnu-gcc version check failed"
+            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER"
+            echo "=== 开始构建 ==="
+            
             pnpm run build:linux-aarch
           fi
         env:
-          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
-          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
-          AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
-          STRIP_aarch64_unknown_linux_gnu: aarch64-linux-gnu-strip
           PKG_CONFIG_ALLOW_CROSS: 1
           # 使用vendored OpenSSL避免交叉编译依赖问题
           OPENSSL_STATIC: 1
