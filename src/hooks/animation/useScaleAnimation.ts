@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+
 import { useSpring } from '@react-spring/web'
 
 // 缩放动画控制器 Hook，用于手动控制动画
@@ -21,7 +22,7 @@ export const useScaleAnimation = () => {
   )
 
   const scaleOut = useCallback(
-    (fromScale = 1, toScale = 0, config?: any) => {
+    (toScale = 0, config?: any) => {
       return api.start({
         transform: `scale(${toScale})`,
         opacity: 0,

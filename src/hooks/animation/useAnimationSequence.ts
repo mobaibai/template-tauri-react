@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+
 import { useSpring } from '@react-spring/web'
 
 // 动画步骤类型定义
@@ -73,14 +74,14 @@ export const useAnimationSequence = (steps: AnimationStep[], from?: any) => {
     (index: number) => {
       if (index < 0 || index >= steps.length) return
       setCurrentStepIndex(index)
-      
+
       // 计算到目标步骤的累积状态
-      const targetState = { ...from } || { opacity: 0, x: 0, y: 0, scale: 1, rotate: 0 }
-      
+      const targetState = from ? { ...from } : { opacity: 0, x: 0, y: 0, scale: 1, rotate: 0 }
+
       for (let i = 0; i <= index; i++) {
         Object.assign(targetState, steps[i].to)
       }
-      
+
       api.set(targetState)
     },
     [steps, api, from]
