@@ -281,8 +281,3 @@ export const AnimationSequence: React.FC<AnimationSequenceProps> = ({
     </div>
   )
 }
-
-export { useAnimationSequence } from '@/hooks/animation/useAnimationSequence'
-
-// 控制器 Hook 已移至 src/hooks/animation/useAnimationSequence.ts
-// 请从那里导入 useAnimationSequence

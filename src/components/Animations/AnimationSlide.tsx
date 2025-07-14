@@ -184,6 +184,5 @@ export const AnimationSlide: React.FC<AnimationSlideProps> = ({
 
 // 控制器 Hook 已移至 src/hooks/animation/useSlideAnimation.ts
 // 请从那里导入 useSlideAnimation
-export { useSlideAnimation } from '@/hooks/animation/useSlideAnimation'
 
 export default AnimationSlide

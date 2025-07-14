@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // 默认适配宽高
 export const width = 1920
@@ -33,7 +33,7 @@ export const useResize = (options: ResizeType = {}) => {
   const screenRef = useRef<HTMLElement | undefined | any>(undefined)
   const [scale, setScale] = useState<number>(1)
 
-  const resize = () => {
+  const resize = useCallback(() => {
     // 浏览器宽高
     const clientWidth = document.body.clientWidth
     const clientHeight = document.body.clientHeight
@@ -59,7 +59,7 @@ export const useResize = (options: ResizeType = {}) => {
         screenRef.current.style.transform = `scale(${clientWidth / clientHeight <= w / h ? scaleW : scaleH})`
       }
     }
-  }
+  }, [w, h, fullScreen])
 
   const resizeDelay = useRef(debounce(resize, delay))
 

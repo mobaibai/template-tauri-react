@@ -245,7 +245,3 @@ export const AnimationScale: React.FC<AnimationScaleProps> = ({
     </div>
   )
 }
-
-// 控制器 Hook 已移至 src/hooks/animation/useScaleAnimation.ts
-// 请从那里导入 useScaleAnimation
-export { useScaleAnimation } from '@/hooks/animation/useScaleAnimation'

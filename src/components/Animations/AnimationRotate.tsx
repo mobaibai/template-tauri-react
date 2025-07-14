@@ -287,4 +287,3 @@ export const AnimationRotate: React.FC<AnimationRotateProps> = ({
 
 // 控制器 Hook 已移至 src/hooks/animation/useRotateAnimation.ts
 // 请从那里导入 useRotateAnimation
-export { useRotateAnimation } from '@/hooks/animation/useRotateAnimation'
