@@ -5,13 +5,13 @@ const buildConfig = {
     // 桌面平台
     'mac-x86': {
       target: 'x86_64-apple-darwin',
-      runner: 'cargo-xwin',
+      runner: 'cargo',
       sourceDir: 'src-tauri/target/x86_64-apple-darwin/release/bundle',
       platform: 'desktop',
     },
     'mac-aarch': {
       target: 'aarch64-apple-darwin',
-      runner: 'cargo-xwin',
+      runner: 'cargo',
       sourceDir: 'src-tauri/target/aarch64-apple-darwin/release/bundle',
       platform: 'desktop',
     },
@@ -27,19 +27,18 @@ const buildConfig = {
       sourceDir: 'src-tauri/target/aarch64-pc-windows-msvc/release/bundle',
       platform: 'desktop',
     },
-    // 打包Linux对系统Mac系统版本要求较低，先不打包
-    // 'linux-x86': {
-    //   target: 'x86_64-unknown-linux-gnu',
-    //   runner: 'cargo',
-    //   sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
-    //   platform: 'desktop',
-    // },
-    // 'linux-aarch': {
-    //   target: 'aarch64-unknown-linux-gnu',
-    //   runner: 'cargo',
-    //   sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
-    //   platform: 'desktop',
-    // },
+    'linux-x86': {
+      target: 'x86_64-unknown-linux-gnu',
+      runner: 'cargo',
+      sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
+      platform: 'desktop',
+    },
+    'linux-aarch': {
+      target: 'aarch64-unknown-linux-gnu',
+      runner: 'cargo',
+      sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
+      platform: 'desktop',
+    },
 
     // 移动平台
     ios: {

@@ -127,12 +127,18 @@ jobs:
             pnpm run build:mac-aarch
           fi
 
+      - name: Create dist-builds directory if not exists
+        run: |
+          mkdir -p dist-builds
+          ls -la dist-builds/
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
+        if: always()
 
   # Windows 构建
   build-windows:
@@ -162,7 +168,7 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cargo-xwin
+      - name: Install cargo-xwin (Windows cross-compilation)
         run: cargo install cargo-xwin
 
       - name: Rust cache
@@ -187,12 +193,20 @@ jobs:
             pnpm run build:win-aarch
           }
 
+      - name: Create dist-builds directory if not exists
+        run: |
+          if (-not (Test-Path "dist-builds")) {
+            New-Item -ItemType Directory -Path "dist-builds" -Force
+          }
+          Get-ChildItem -Path "dist-builds" -Recurse
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
+        if: always()
 
   # Linux 构建
   build-linux:
@@ -225,7 +239,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             sudo apt-get install -y gcc-aarch64-linux-gnu
           fi
@@ -257,12 +271,18 @@ jobs:
           AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
           STRIP_aarch64_unknown_linux_gnu: aarch64-linux-gnu-strip
 
+      - name: Create dist-builds directory if not exists
+        run: |
+          mkdir -p dist-builds
+          ls -la dist-builds/
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
+        if: always()
 
   # iOS 构建 (仅在 macOS 上)
   build-ios:

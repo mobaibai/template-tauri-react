@@ -13,7 +13,7 @@
 
 - 🚀 **现代化技术栈**：React 18 + TypeScript + Vite + Tauri 2.0
 - 🎨 **UI 框架**：Ant Design + UnoCSS 原子化CSS + SCSS
-- 🔧 **开发工具**：ESLint + Prettier + Husky + VS Code 配置
+- 🔧 **开发工具**：ESLint + Prettier + VS Code 配置
 - 📊 **状态管理**：Zustand + SWR 数据获取
 - 🎭 **动画系统**：自定义动画组件 + CSS3 动画
 - 🌐 **网络请求**：封装的 HTTP 客户端 + Tauri IPC 通信
@@ -164,7 +164,6 @@ git push origin v1.0.0
 - [GitHub Actions CI/CD 指南](docs/GITHUB_ACTIONS.md) - 自动化构建和发布流程
 - [前端构建优化与边界处理](docs/frontend-build-optimization.md) - 前端构建优化和边界处理功能
 - [缓存清理指南](docs/CACHE_CLEANUP.md) - 构建缓存管理
-- [Husky 配置指南](docs/HUSKY_SETUP.md) - Git Hooks 配置和使用
 - [故障排除指南](docs/TROUBLESHOOTING.md) - 常见问题解决方案
 
 ### API 参考
@@ -191,7 +190,6 @@ git push origin v1.0.0
 - [Frontend Build Optimization (EN)](docs/frontend-build-optimization.en.md) -
   Frontend build optimization and edge case handling
 - [Cache Cleanup (EN)](docs/CACHE_CLEANUP.en.md) - Build cache management
-- [Husky Setup (EN)](docs/HUSKY_SETUP.en.md) - Git Hooks configuration
 - [Troubleshooting (EN)](docs/TROUBLESHOOTING.en.md) - Common problem solutions
 
 ## 🤝 贡献
