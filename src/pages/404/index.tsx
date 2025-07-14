@@ -9,7 +9,7 @@ type Props = {
   title?: string
 }
 const EmptyPage: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
 
   return (
     <div className="empty-page-container h-screen flex-center flex-col space-y-50px">

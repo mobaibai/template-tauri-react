@@ -5,9 +5,9 @@ import { useEffect } from 'react'
  * @param {string} title - 页面标题
  * @return {void}
  * @example:
- * useTitleSafe('首页')
+ * useTitle('首页')
  */
-export function useTitleSafe(title?: string) {
+export function useTitle(title?: string) {
   useEffect(() => {
     if (title) {
       document.title = title

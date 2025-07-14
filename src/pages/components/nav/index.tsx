@@ -56,7 +56,7 @@ interface Props {
   title?: string
 }
 export const Nav: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
 
   /**
    * @description: Nav点击处理

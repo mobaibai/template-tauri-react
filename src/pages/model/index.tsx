@@ -58,9 +58,7 @@ type Props = {
   title?: string
 }
 export const ModelPage: React.FC<Props> = props => {
-  if (props.title) {
-    useTitle(props.title)
-  }
+  useTitle(props.title)
 
   return (
     <div className="model-container w-full h-[calc(100vh-46px)] relative">
