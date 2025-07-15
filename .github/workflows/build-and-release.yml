@@ -33,6 +33,7 @@ jobs:
   # 前端构建和测试
   frontend-test:
     runs-on: ubuntu-latest
+    continue-on-error: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -64,18 +65,23 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Run TypeScript check
         run: pnpm run type-check
+        continue-on-error: false
 
       - name: Run ESLint
         run: pnpm run lint
+        continue-on-error: false
 
       - name: Check code formatting
         run: pnpm run format:check
+        continue-on-error: false
 
       - name: Build frontend
         run: pnpm run build
+        continue-on-error: false
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4
@@ -88,7 +94,9 @@ jobs:
   build-macos:
     needs: frontend-test
     runs-on: macos-latest
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         target: [x86_64-apple-darwin, aarch64-apple-darwin]
     steps:
@@ -135,14 +143,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+        continue-on-error: false
 
       - name: Build Tauri app
+        continue-on-error: false
         run: |
           if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
             pnpm run build:mac-x86
@@ -162,12 +173,15 @@ jobs:
           path: dist-builds/
           retention-days: 3
         if: always()
+        continue-on-error: true
 
   # Windows 构建
   build-windows:
     needs: frontend-test
     runs-on: windows-latest
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         # 注释掉 aarch64-pc-windows-msvc: x86_64 版本在 ARM 芯片上也能运行
         target: [x86_64-pc-windows-msvc] # , aarch64-pc-windows-msvc
@@ -234,14 +248,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+        continue-on-error: false
 
       - name: Build Tauri app
+        continue-on-error: false
         run: |
           if ("${{ matrix.target }}" -eq "x86_64-pc-windows-msvc") {
             pnpm run build:win-x86
@@ -263,13 +280,16 @@ jobs:
           path: dist-builds/
           retention-days: 3
         if: always()
+        continue-on-error: true
 
   # Linux 构建
   build-linux:
     needs: frontend-test
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         # 注释掉 aarch64-unknown-linux-gnu: x86_64 版本在 ARM 芯片上也能运行
         target: [x86_64-unknown-linux-gnu] # , aarch64-unknown-linux-gnu
@@ -357,14 +377,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+        continue-on-error: false
 
       - name: Build Tauri app
+        continue-on-error: false
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
             pnpm run build:linux-x86
@@ -405,12 +428,13 @@ jobs:
           path: dist-builds/
           retention-days: 3
         if: always()
+        continue-on-error: true
 
   # 创建 Release
   create-release:
     needs: [build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -432,6 +456,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
+        continue-on-error: true
 
       - name: Create Release
         id: create_release
@@ -484,7 +509,9 @@ jobs:
   upload-release-assets:
     needs: [create-release, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
+    if: always() && needs.create-release.result == 'success'
     strategy:
+      fail-fast: false
       matrix:
         include:
           - artifact: macos-x86_64-apple-darwin
@@ -516,11 +543,14 @@ jobs:
       - name: Check if build succeeded
         id: check_build
         run: |
+          echo "Checking build status for ${{ matrix.build_job }}..."
+          echo "Build result: ${{ needs[matrix.build_job].result }}"
           if [ "${{ needs[matrix.build_job].result }}" = "success" ]; then
             echo "build_success=true" >> $GITHUB_OUTPUT
+            echo "✅ Build job ${{ matrix.build_job }} succeeded, proceeding with artifact upload for ${{ matrix.artifact }}"
           else
             echo "build_success=false" >> $GITHUB_OUTPUT
-            echo "Build job ${{ matrix.build_job }} did not succeed, skipping artifact upload for ${{ matrix.artifact }}"
+            echo "❌ Build job ${{ matrix.build_job }} did not succeed (result: ${{ needs[matrix.build_job].result }}), skipping artifact upload for ${{ matrix.artifact }}"
           fi
 
       - name: Download artifacts
@@ -533,6 +563,7 @@ jobs:
 
       - name: Upload Release Assets
         if: steps.check_build.outputs.build_success == 'true'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -608,28 +639,67 @@ jobs:
               }
             }
 
-  # 清理工作流产物
-  cleanup:
-    needs: [upload-release-assets]
+  # 构建状态总结
+  build-summary:
+    needs: [frontend-test, build-macos, build-windows, build-linux, create-release, upload-release-assets]
     runs-on: ubuntu-latest
     if: always()
     steps:
+      - name: Build Summary
+        run: |
+          echo "## 🏗️ 构建状态总结"
+          echo "| 任务 | 状态 |"
+          echo "|------|------|"
+          echo "| 前端测试 | ${{ needs.frontend-test.result == 'success' && '✅ 成功' || '❌ 失败' }} |"
+          echo "| macOS 构建 | ${{ needs.build-macos.result == 'success' && '✅ 成功' || (needs.build-macos.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| Windows 构建 | ${{ needs.build-windows.result == 'success' && '✅ 成功' || (needs.build-windows.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| Linux 构建 | ${{ needs.build-linux.result == 'success' && '✅ 成功' || (needs.build-linux.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| 创建 Release | ${{ needs.create-release.result == 'success' && '✅ 成功' || (needs.create-release.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| 上传资源 | ${{ needs.upload-release-assets.result == 'success' && '✅ 成功' || (needs.upload-release-assets.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo ""
+          echo "### 📊 详细信息"
+          echo "- 前端测试结果: ${{ needs.frontend-test.result }}"
+          echo "- macOS 构建结果: ${{ needs.build-macos.result }}"
+          echo "- Windows 构建结果: ${{ needs.build-windows.result }}"
+          echo "- Linux 构建结果: ${{ needs.build-linux.result }}"
+          echo "- Release 创建结果: ${{ needs.create-release.result }}"
+          echo "- 资源上传结果: ${{ needs.upload-release-assets.result }}"
+
+  # 清理工作流产物
+  cleanup:
+    needs: [build-summary]
+    runs-on: ubuntu-latest
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+    steps:
       - name: Delete workflow artifacts
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-            });
-
-            for (const artifact of artifacts.data.artifacts) {
-              console.log(`Deleting artifact: ${artifact.name}`);
-              await github.rest.actions.deleteArtifact({
+            try {
+              const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                artifact_id: artifact.id,
+                run_id: context.runId,
               });
+
+              console.log(`Found ${artifacts.data.artifacts.length} artifacts to clean up`);
+              
+              for (const artifact of artifacts.data.artifacts) {
+                try {
+                  console.log(`Deleting artifact: ${artifact.name}`);
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                  });
+                  console.log(`✅ Successfully deleted: ${artifact.name}`);
+                } catch (error) {
+                  console.log(`❌ Failed to delete ${artifact.name}: ${error.message}`);
+                }
+              }
+              console.log('🧹 Cleanup completed');
+            } catch (error) {
+              console.log(`❌ Cleanup failed: ${error.message}`);
             }
