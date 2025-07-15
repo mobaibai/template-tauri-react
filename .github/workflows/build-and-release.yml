@@ -757,6 +757,7 @@ jobs:
                 data: fileData,
               });
             }
+          }
 
   # 上传移动端构建产物 (如果存在)
   upload-mobile-assets:
