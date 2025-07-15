@@ -656,7 +656,7 @@ jobs:
 
   # 上传构建产物到 Release
   upload-release-assets:
-    needs: create-release
+    needs: [create-release, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -664,30 +664,49 @@ jobs:
           - artifact: macos-x86_64-apple-darwin
             pattern: '*.dmg'
             name: 'macOS-Intel'
+            build_job: 'build-macos'
           - artifact: macos-aarch64-apple-darwin
             pattern: '*.dmg'
             name: 'macOS-AppleSilicon'
+            build_job: 'build-macos'
           - artifact: windows-x86_64-pc-windows-msvc
             pattern: '*.exe'
             name: 'Windows-x64'
+            build_job: 'build-windows'
           # 注释掉 ARM 架构版本: x86_64 版本在 ARM 芯片上也能运行
           # - artifact: windows-aarch64-pc-windows-msvc
           #   pattern: '*.exe'
           #   name: 'Windows-ARM64'
+          #   build_job: 'build-windows'
           - artifact: linux-x86_64-unknown-linux-gnu
             pattern: '*.{AppImage,deb,rpm}'
             name: 'Linux-x64'
+            build_job: 'build-linux'
           # - artifact: linux-aarch64-unknown-linux-gnu
           #   pattern: '*.{AppImage,deb,rpm}'
           #   name: 'Linux-ARM64'
+          #   build_job: 'build-linux'
     steps:
+      - name: Check if build succeeded
+        id: check_build
+        run: |
+          if [ "${{ needs[matrix.build_job].result }}" = "success" ]; then
+            echo "build_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_success=false" >> $GITHUB_OUTPUT
+            echo "Build job ${{ matrix.build_job }} did not succeed, skipping artifact upload for ${{ matrix.artifact }}"
+          fi
+
       - name: Download artifacts
+        if: steps.check_build.outputs.build_success == 'true'
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: ./release-assets/
+        continue-on-error: true
 
       - name: Upload Release Assets
+        if: steps.check_build.outputs.build_success == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -699,8 +718,19 @@ jobs:
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
 
+            // 检查目录是否存在
+            if (!fs.existsSync(artifactPath)) {
+              console.log(`Artifact path ${artifactPath} does not exist, skipping upload`);
+              return;
+            }
+
             // 查找所有匹配的文件
             const files = await glob('${{ matrix.pattern }}', { cwd: artifactPath });
+
+            if (files.length === 0) {
+              console.log(`No files found matching pattern '${{ matrix.pattern }}' in ${artifactPath}`);
+              return;
+            }
 
             for (const file of files) {
               const filePath = path.join(artifactPath, file);
@@ -750,13 +780,13 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const { glob } = require('glob');
+            const { glob: globPattern } = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
 
             // 上传 iOS 文件
             if (fs.existsSync('./ios-assets/')) {
-              const iosFiles = await glob('*.{ipa,app}', { cwd: './ios-assets/' });
+              const iosFiles = await globPattern('*.{ipa,app}', { cwd: './ios-assets/' });
               for (const file of iosFiles) {
                 const filePath = path.join('./ios-assets/', file);
                 const fileName = path.basename(file);
@@ -776,7 +806,7 @@ jobs:
 
             // 上传 Android 文件
             if (fs.existsSync('./android-assets/')) {
-              const androidFiles = await glob('*.apk', { cwd: './android-assets/' });
+              const androidFiles = await globPattern('*.apk', { cwd: './android-assets/' });
               for (const file of androidFiles) {
                 const filePath = path.join('./android-assets/', file);
                 const fileName = path.basename(file);
