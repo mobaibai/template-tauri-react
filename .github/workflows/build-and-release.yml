@@ -694,13 +694,13 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const glob = require('glob');
+            const { glob } = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
 
             // 查找所有匹配的文件
-            const files = glob.sync('${{ matrix.pattern }}', { cwd: artifactPath });
+            const files = await glob('${{ matrix.pattern }}', { cwd: artifactPath });
 
             for (const file of files) {
               const filePath = path.join(artifactPath, file);
@@ -750,13 +750,13 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const glob = require('glob');
+            const { glob } = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
 
             // 上传 iOS 文件
             if (fs.existsSync('./ios-assets/')) {
-              const iosFiles = glob.sync('*.{ipa,app}', { cwd: './ios-assets/' });
+              const iosFiles = await glob('*.{ipa,app}', { cwd: './ios-assets/' });
               for (const file of iosFiles) {
                 const filePath = path.join('./ios-assets/', file);
                 const fileName = path.basename(file);
@@ -776,7 +776,7 @@ jobs:
 
             // 上传 Android 文件
             if (fs.existsSync('./android-assets/')) {
-              const androidFiles = glob.sync('*.apk', { cwd: './android-assets/' });
+              const androidFiles = await glob('*.apk', { cwd: './android-assets/' });
               for (const file of androidFiles) {
                 const filePath = path.join('./android-assets/', file);
                 const fileName = path.basename(file);
