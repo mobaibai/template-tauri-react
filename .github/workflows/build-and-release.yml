@@ -829,6 +829,7 @@ jobs:
                 });
               }
             }
+          }
 
   # 清理工作流产物
   cleanup:
@@ -855,3 +856,4 @@ jobs:
                 artifact_id: artifact.id,
               });
             }
+          }
