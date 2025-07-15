@@ -1,6 +1,6 @@
 {
   "name": "template-tauri-react",
-  "version": "0.0.1",
+  "version": "0.0.25",
   "description": "A modern cross-platform desktop application template built with Tauri 2.0, React 18, TypeScript, and Ant Design. Features system monitoring, 3D rendering, animation system, and comprehensive development tools.",
   "type": "module",
   "private": false,

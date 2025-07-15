@@ -539,7 +539,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const { glob } = require('glob');
+            const globModule = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
@@ -551,7 +551,7 @@ jobs:
             }
 
             // 查找所有匹配的文件
-            const files = await glob('${{ matrix.pattern }}', { cwd: artifactPath });
+            const files = await globModule.glob('${{ matrix.pattern }}', { cwd: artifactPath });
 
             if (files.length === 0) {
               console.log(`No files found matching pattern '${{ matrix.pattern }}' in ${artifactPath}`);
