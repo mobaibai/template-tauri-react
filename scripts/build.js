@@ -537,7 +537,13 @@ function copyBuildArtifacts(platformName, config) {
           files.forEach(file => {
             const sourcePath = path.join(dir, file)
             const targetPath = path.join(buildConfig.options.outputRoot, file)
-            execSync(`cp "${sourcePath}" "${targetPath}"`)
+            const stat = fs.statSync(sourcePath)
+
+            if (stat.isDirectory()) {
+              execSync(`cp -r "${sourcePath}" "${targetPath}"`)
+            } else {
+              execSync(`cp "${sourcePath}" "${targetPath}"`)
+            }
             logSuccess(`已复制 ${file} 到 ${buildConfig.options.outputRoot}`)
           })
         }
