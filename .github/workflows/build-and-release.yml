@@ -317,7 +317,7 @@ jobs:
           OPENSSL_STATIC: 1
           OPENSSL_VENDORED: 1
           # 强制静态链接以避免交叉编译问题
-          RUSTFLAGS: "-C target-feature=+crt-static"
+          RUSTFLAGS: '-C target-feature=+crt-static'
 
       - name: Create dist-builds directory if not exists
         run: |
