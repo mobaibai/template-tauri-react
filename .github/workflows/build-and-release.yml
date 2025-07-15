@@ -659,6 +659,7 @@ jobs:
     needs: [create-release, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - artifact: macos-x86_64-apple-darwin
@@ -701,7 +702,11 @@ jobs:
         if: steps.check_build.outputs.build_success == 'true'
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ 
+            matrix.artifact == 'windows-x86_64-pc-windows-msvc' && 'windows-x86_64-pc-windows-msvc' ||
+            matrix.artifact == 'linux-x86_64-unknown-linux-gnu' && 'linux-x86_64-unknown-linux-gnu' ||
+            matrix.artifact
+          }}
           path: ./release-assets/
         continue-on-error: true
 
@@ -713,7 +718,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const { glob } = require('glob');
+            const { glob: globFiles } = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
@@ -725,7 +730,7 @@ jobs:
             }
 
             // 查找所有匹配的文件
-            const files = await glob('${{ matrix.pattern }}', { cwd: artifactPath });
+            const files = await globFiles('${{ matrix.pattern }}', { cwd: artifactPath });
 
             if (files.length === 0) {
               console.log(`No files found matching pattern '${{ matrix.pattern }}' in ${artifactPath}`);
