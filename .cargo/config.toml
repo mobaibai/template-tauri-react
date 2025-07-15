@@ -18,6 +18,10 @@ linker = "lld-link"
 [target.aarch64-pc-windows-msvc]
 linker = "rust-lld"
 
+# Linux 跨平台编译配置
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+
 # 环境变量配置
 [env]
 CC_x86_64_pc_windows_msvc = "clang-cl"
@@ -25,3 +29,8 @@ CXX_x86_64_pc_windows_msvc = "clang-cl"
 AR_x86_64_pc_windows_msvc = "llvm-lib"
 # cargo-xwin 配置
 CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER = "rust-lld"
+# Linux aarch64 交叉编译配置
+CC_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-gcc"
+CXX_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-g++"
+AR_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-ar"
+STRIP_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-strip"

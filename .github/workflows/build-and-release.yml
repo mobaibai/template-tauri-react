@@ -252,6 +252,10 @@ jobs:
             echo "=== 安装 aarch64 交叉编译工具链 ==="
             sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
             
+            # 安装 aarch64 系统库依赖
+            sudo apt-get install -y libwebkit2gtk-4.1-dev:arm64 libappindicator3-dev:arm64 librsvg2-dev:arm64 libssl-dev:arm64 || true
+            sudo apt-get install -y libdbus-1-dev:arm64 libglib2.0-dev:arm64 libgtk-3-dev:arm64 || true
+            
             # 验证工具链安装
             echo "=== 验证交叉编译工具链 ==="
             which aarch64-linux-gnu-gcc
@@ -261,6 +265,10 @@ jobs:
             
             # 检查 pkg-config 路径
             ls -la /usr/lib/aarch64-linux-gnu/pkgconfig/ || echo "aarch64 pkgconfig directory not found"
+            
+            # 设置 pkg-config 搜索路径
+            export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
+            echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
           fi
 
       - name: Rust cache
@@ -308,6 +316,8 @@ jobs:
           # 使用vendored OpenSSL避免交叉编译依赖问题
           OPENSSL_STATIC: 1
           OPENSSL_VENDORED: 1
+          # 强制静态链接以避免交叉编译问题
+          RUSTFLAGS: "-C target-feature=+crt-static"
 
       - name: Create dist-builds directory if not exists
         run: |
