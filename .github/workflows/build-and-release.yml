@@ -1,5 +1,12 @@
 name: Build and Release
 
+# 添加权限配置以解决 Create Release 权限错误
+permissions:
+  contents: write
+  packages: write
+  actions: read
+  security-events: write
+
 on:
   push:
     tags:
@@ -17,6 +24,11 @@ on:
           - draft
           - prerelease
           - release
+      include_mobile:
+        description: 'Include mobile builds (iOS/Android)'
+        required: false
+        default: false
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -403,7 +415,7 @@ jobs:
   build-ios:
     needs: frontend-test
     runs-on: macos-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.ref, 'mobile')
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.include_mobile == 'true') || contains(github.ref, 'mobile')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -474,7 +486,7 @@ jobs:
   build-android:
     needs: frontend-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.ref, 'mobile')
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.include_mobile == 'true') || contains(github.ref, 'mobile')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
