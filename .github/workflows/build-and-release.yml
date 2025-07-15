@@ -24,11 +24,6 @@ on:
           - draft
           - prerelease
           - release
-      include_mobile:
-        description: 'Include mobile builds (iOS/Android)'
-        required: false
-        default: false
-        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -411,171 +406,6 @@ jobs:
           retention-days: 3
         if: always()
 
-  # iOS 构建 (仅在 macOS 上)
-  build-ios:
-    needs: frontend-test
-    runs-on: macos-latest
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.include_mobile == 'true') || contains(github.ref, 'mobile')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 'latest'
-          run_install: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-ios
-
-      - name: Cache Rust toolchain
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.rustup
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-rust-toolchain-ios-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-rust-toolchain-ios-
-        timeout-minutes: 10
-        continue-on-error: true
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download frontend artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: dist/
-
-      - name: Initialize iOS project
-        run: pnpm run init:ios
-
-      - name: Build iOS app
-        run: pnpm run build:ios
-
-      - name: Upload iOS artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-build
-          path: dist-builds/
-          retention-days: 3
-
-  # Android 构建
-  build-android:
-    needs: frontend-test
-    runs-on: ubuntu-latest
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.include_mobile == 'true') || contains(github.ref, 'mobile')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 'latest'
-          run_install: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
-
-      - name: Cache Rust toolchain
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.rustup
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-rust-toolchain-android-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-rust-toolchain-android-
-        timeout-minutes: 10
-        continue-on-error: true
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Cache Android NDK
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.ANDROID_SDK_ROOT }}/ndk
-          key: ${{ runner.os }}-android-ndk-25.1.8937393
-          restore-keys: |
-            ${{ runner.os }}-android-ndk-
-        timeout-minutes: 10
-        continue-on-error: true
-
-      - name: Install Android NDK
-        run: |
-          if [ ! -d "$ANDROID_SDK_ROOT/ndk/25.1.8937393" ]; then
-            sdkmanager "ndk;25.1.8937393"
-          else
-            echo "Android NDK already installed"
-          fi
-          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393" >> $GITHUB_ENV
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download frontend artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: dist/
-
-      - name: Initialize Android project
-        run: pnpm run init:android
-
-      - name: Build Android app
-        run: pnpm run build:android
-
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build
-          path: dist-builds/
-          retention-days: 3
-
   # 创建 Release
   create-release:
     needs: [build-macos, build-windows, build-linux]
@@ -623,9 +453,7 @@ jobs:
 
             > **注意**: Windows 和 Linux 的 x86_64 版本可以在 ARM64 芯片上运行，因此不再单独提供 ARM64 原生版本。
 
-            #### 移动版本 (如果可用)
-            - **iOS**: 需要 iOS 13.0 或更高版本
-            - **Android**: 需要 Android 7.0 (API 24) 或更高版本
+
 
             ### 🔧 安装说明
 
@@ -644,9 +472,7 @@ jobs:
             - **DEB**: 使用 `sudo dpkg -i *.deb` 安装
             - **RPM**: 使用 `sudo rpm -i *.rpm` 安装
 
-            ### 📱 移动端
-            - **iOS**: 需要通过 TestFlight 或企业分发安装
-            - **Android**: 下载 APK 文件并允许未知来源安装
+
 
             ---
 
@@ -659,7 +485,6 @@ jobs:
     needs: [create-release, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         include:
           - artifact: macos-x86_64-apple-darwin
@@ -702,11 +527,7 @@ jobs:
         if: steps.check_build.outputs.build_success == 'true'
         uses: actions/download-artifact@v4
         with:
-          name: ${{ 
-            matrix.artifact == 'windows-x86_64-pc-windows-msvc' && 'windows-x86_64-pc-windows-msvc' ||
-            matrix.artifact == 'linux-x86_64-unknown-linux-gnu' && 'linux-x86_64-unknown-linux-gnu' ||
-            matrix.artifact
-          }}
+          name: ${{ matrix.artifact }}
           path: ./release-assets/
         continue-on-error: true
 
@@ -718,7 +539,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const { glob: globFiles } = require('glob');
+            const { glob } = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
@@ -730,7 +551,7 @@ jobs:
             }
 
             // 查找所有匹配的文件
-            const files = await globFiles('${{ matrix.pattern }}', { cwd: artifactPath });
+            const files = await glob('${{ matrix.pattern }}', { cwd: artifactPath });
 
             if (files.length === 0) {
               console.log(`No files found matching pattern '${{ matrix.pattern }}' in ${artifactPath}`);
@@ -757,83 +578,10 @@ jobs:
                 data: fileData,
               });
             }
-          }
-
-  # 上传移动端构建产物 (如果存在)
-  upload-mobile-assets:
-    needs: [create-release, build-ios, build-android]
-    runs-on: ubuntu-latest
-    if: always() && (needs.build-ios.result == 'success' || needs.build-android.result == 'success')
-    steps:
-      - name: Download iOS artifacts
-        if: needs.build-ios.result == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-build
-          path: ./ios-assets/
-
-      - name: Download Android artifacts
-        if: needs.build-android.result == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: android-build
-          path: ./android-assets/
-
-      - name: Upload Mobile Assets
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const { glob: globPattern } = require('glob');
-
-            const releaseId = '${{ needs.create-release.outputs.release_id }}';
-
-            // 上传 iOS 文件
-            if (fs.existsSync('./ios-assets/')) {
-              const iosFiles = await globPattern('*.{ipa,app}', { cwd: './ios-assets/' });
-              for (const file of iosFiles) {
-                const filePath = path.join('./ios-assets/', file);
-                const fileName = path.basename(file);
-                const fileData = fs.readFileSync(filePath);
-
-                console.log(`Uploading iOS ${fileName}...`);
-
-                await github.rest.repos.uploadReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  release_id: releaseId,
-                  name: `iOS-${fileName}`,
-                  data: fileData,
-                });
-              }
-            }
-
-            // 上传 Android 文件
-            if (fs.existsSync('./android-assets/')) {
-              const androidFiles = await globPattern('*.apk', { cwd: './android-assets/' });
-              for (const file of androidFiles) {
-                const filePath = path.join('./android-assets/', file);
-                const fileName = path.basename(file);
-                const fileData = fs.readFileSync(filePath);
-
-                console.log(`Uploading Android ${fileName}...`);
-
-                await github.rest.repos.uploadReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  release_id: releaseId,
-                  name: `Android-${fileName}`,
-                  data: fileData,
-                });
-              }
-            }
-          }
 
   # 清理工作流产物
   cleanup:
-    needs: [upload-release-assets, upload-mobile-assets]
+    needs: [upload-release-assets]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -856,4 +604,3 @@ jobs:
                 artifact_id: artifact.id,
               });
             }
-          }
