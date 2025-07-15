@@ -105,6 +105,21 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-
+        timeout-minutes: 10
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
@@ -149,7 +164,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        target: [x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]
+        # 注释掉 aarch64-pc-windows-msvc: x86_64 版本在 ARM 芯片上也能运行
+        target: [x86_64-pc-windows-msvc] # , aarch64-pc-windows-msvc
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -171,8 +187,40 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Cache cargo-xwin
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-xwin
+          key: ${{ runner.os }}-cargo-xwin-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-xwin-
+        timeout-minutes: 5
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
+
       - name: Install cargo-xwin (Windows cross-compilation)
-        run: cargo install cargo-xwin
+        run: |
+          if ! command -v cargo-xwin &> /dev/null; then
+            cargo install cargo-xwin
+          else
+            echo "cargo-xwin already installed"
+          fi
+
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-
+        timeout-minutes: 10
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -221,7 +269,8 @@ jobs:
     timeout-minutes: 90
     strategy:
       matrix:
-        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+        # 注释掉 aarch64-unknown-linux-gnu: x86_64 版本在 ARM 芯片上也能运行
+        target: [x86_64-unknown-linux-gnu] # , aarch64-unknown-linux-gnu
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -242,6 +291,35 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
+      - name: Cache system dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt
+            /var/lib/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/.github/workflows/build-and-release.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+        timeout-minutes: 5
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
+
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-
+        timeout-minutes: 10
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
 
       - name: Install system dependencies
         run: |
@@ -316,8 +394,6 @@ jobs:
           # 使用vendored OpenSSL避免交叉编译依赖问题
           OPENSSL_STATIC: 1
           OPENSSL_VENDORED: 1
-          # 强制静态链接以避免交叉编译问题
-          RUSTFLAGS: '-C target-feature=+crt-static'
 
       - name: Create dist-builds directory if not exists
         run: |
@@ -357,6 +433,21 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-ios
+
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-ios-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-ios-
+        timeout-minutes: 10
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -416,6 +507,21 @@ jobs:
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-android-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-android-
+        timeout-minutes: 10
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -425,9 +531,25 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ANDROID_SDK_ROOT }}/ndk
+          key: ${{ runner.os }}-android-ndk-25.1.8937393
+          restore-keys: |
+            ${{ runner.os }}-android-ndk-
+        timeout-minutes: 10
+        continue-on-error: true
+        # 缓存7天
+        retention-days: 7
+
       - name: Install Android NDK
         run: |
-          sdkmanager "ndk;25.1.8937393"
+          if [ ! -d "$ANDROID_SDK_ROOT/ndk/25.1.8937393" ]; then
+            sdkmanager "ndk;25.1.8937393"
+          else
+            echo "Android NDK already installed"
+          fi
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393" >> $GITHUB_ENV
 
       - name: Rust cache
@@ -499,8 +621,10 @@ jobs:
 
             #### 桌面版本
             - **macOS**: 支持 Intel (x86_64) 和 Apple Silicon (ARM64)
-            - **Windows**: 支持 x86_64 和 ARM64
-            - **Linux**: 支持 x86_64 和 ARM64 (AppImage, DEB, RPM)
+            - **Windows**: 支持 x86_64 (兼容 ARM64 芯片)
+            - **Linux**: 支持 x86_64 (兼容 ARM64 芯片) (AppImage, DEB, RPM)
+
+            > **注意**: Windows 和 Linux 的 x86_64 版本可以在 ARM64 芯片上运行，因此不再单独提供 ARM64 原生版本。
 
             #### 移动版本 (如果可用)
             - **iOS**: 需要 iOS 13.0 或更高版本
@@ -549,15 +673,16 @@ jobs:
           - artifact: windows-x86_64-pc-windows-msvc
             pattern: '*.exe'
             name: 'Windows-x64'
-          - artifact: windows-aarch64-pc-windows-msvc
-            pattern: '*.exe'
-            name: 'Windows-ARM64'
+          # 注释掉 ARM 架构版本: x86_64 版本在 ARM 芯片上也能运行
+          # - artifact: windows-aarch64-pc-windows-msvc
+          #   pattern: '*.exe'
+          #   name: 'Windows-ARM64'
           - artifact: linux-x86_64-unknown-linux-gnu
             pattern: '*.{AppImage,deb,rpm}'
             name: 'Linux-x64'
-          - artifact: linux-aarch64-unknown-linux-gnu
-            pattern: '*.{AppImage,deb,rpm}'
-            name: 'Linux-ARM64'
+          # - artifact: linux-aarch64-unknown-linux-gnu
+          #   pattern: '*.{AppImage,deb,rpm}'
+          #   name: 'Linux-ARM64'
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
