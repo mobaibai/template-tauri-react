@@ -641,7 +641,15 @@ jobs:
 
   # 构建状态总结
   build-summary:
-    needs: [frontend-test, build-macos, build-windows, build-linux, create-release, upload-release-assets]
+    needs:
+      [
+        frontend-test,
+        build-macos,
+        build-windows,
+        build-linux,
+        create-release,
+        upload-release-assets,
+      ]
     runs-on: ubuntu-latest
     if: always()
     steps:
