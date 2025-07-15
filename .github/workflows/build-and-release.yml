@@ -556,7 +556,7 @@ jobs:
             // 根据不同的模式匹配文件
             let matchedFiles = [];
             const pattern = '${{ matrix.pattern }}';
-            
+
             if (pattern === '*.dmg') {
               matchedFiles = allFiles.filter(file => file.endsWith('.dmg'));
             } else if (pattern === '*.exe') {
