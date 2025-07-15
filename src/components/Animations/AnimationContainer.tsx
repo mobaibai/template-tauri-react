@@ -111,12 +111,13 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
       const { type, config = {} } = effect
 
       switch (type) {
-        case 'opacity':
+        case 'opacity': {
           initialState.opacity = config.fromOpacity ?? 0
           break
+        }
 
         case 'spring':
-        case 'slide':
+        case 'slide': {
           const direction = config.direction || 'top'
           const distance = config.distance || 30
 
@@ -136,24 +137,27 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
             initialState.y = 0
           }
 
-          if (!initialState.hasOwnProperty('opacity')) {
+          if (!('opacity' in initialState)) {
             initialState.opacity = config.fromOpacity ?? 0
           }
           break
+        }
 
-        case 'scale':
+        case 'scale': {
           initialState.scale = config.fromScale ?? 0
-          if (!initialState.hasOwnProperty('opacity')) {
+          if (!('opacity' in initialState)) {
             initialState.opacity = config.fromOpacity ?? 0
           }
           break
+        }
 
-        case 'rotate':
+        case 'rotate': {
           initialState.rotate = config.fromRotate ?? 0
-          if (!initialState.hasOwnProperty('opacity')) {
+          if (!('opacity' in initialState)) {
             initialState.opacity = config.fromOpacity ?? 0
           }
           break
+        }
       }
     })
 
@@ -168,32 +172,36 @@ export const AnimationContainer: React.FC<AnimationContainerProps> = ({
       const { type, config = {} } = effect
 
       switch (type) {
-        case 'opacity':
+        case 'opacity': {
           targetState.opacity = config.toOpacity ?? 1
           break
+        }
 
         case 'spring':
-        case 'slide':
+        case 'slide': {
           targetState.x = 0
           targetState.y = 0
-          if (!targetState.hasOwnProperty('opacity')) {
+          if (!('opacity' in targetState)) {
             targetState.opacity = config.toOpacity ?? 1
           }
           break
+        }
 
-        case 'scale':
+        case 'scale': {
           targetState.scale = config.toScale ?? 1
-          if (!targetState.hasOwnProperty('opacity')) {
+          if (!('opacity' in targetState)) {
             targetState.opacity = config.toOpacity ?? 1
           }
           break
+        }
 
-        case 'rotate':
+        case 'rotate': {
           targetState.rotate = config.toRotate ?? 0
-          if (!targetState.hasOwnProperty('opacity')) {
+          if (!('opacity' in targetState)) {
             targetState.opacity = config.toOpacity ?? 1
           }
           break
+        }
       }
     })
 

@@ -105,3 +105,5 @@ export const useIpcAjax = (options?: Options) => {
 
   return ipcAjax
 }
+
+export default useIpcAjax

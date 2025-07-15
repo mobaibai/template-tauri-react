@@ -11,7 +11,7 @@ interface Props {
   title?: string
 }
 export const StartLoading: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
 
   useEffect(() => {
     // 组件挂载完成后通知后端显示loading窗口

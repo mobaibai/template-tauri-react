@@ -1,4 +1,4 @@
-import React, { type ReactNode, useCallback, useEffect, useMemo } from 'react'
+import React, { type ReactNode, useEffect, useMemo } from 'react'
 
 import { animated, useSpring } from '@react-spring/web'
 
@@ -182,55 +182,7 @@ export const AnimationSlide: React.FC<AnimationSlideProps> = ({
   )
 }
 
-// 导出一个控制器 Hook，用于手动控制动画
-export const useSlideAnimation = () => {
-  const [styles, api] = useSpring(() => ({
-    transform: 'translate3d(0, 0, 0)',
-    opacity: 1,
-  }))
-
-  const slideIn = useCallback(
-    (direction: SlideDirection, distance = 100, config?: any) => {
-      const transforms = {
-        slideInLeft: `translate3d(-${distance}px, 0, 0)`,
-        slideInRight: `translate3d(${distance}px, 0, 0)`,
-        slideInUp: `translate3d(0, ${distance}px, 0)`,
-        slideInDown: `translate3d(0, -${distance}px, 0)`,
-      }
-
-      api.set({
-        transform: transforms[direction as keyof typeof transforms] || transforms.slideInLeft,
-        opacity: 0,
-      })
-
-      return api.start({
-        transform: 'translate3d(0, 0, 0)',
-        opacity: 1,
-        config,
-      })
-    },
-    [api]
-  )
-
-  const slideOut = useCallback(
-    (direction: SlideDirection, distance = 100, config?: any) => {
-      const transforms = {
-        slideOutLeft: `translate3d(-${distance}px, 0, 0)`,
-        slideOutRight: `translate3d(${distance}px, 0, 0)`,
-        slideOutUp: `translate3d(0, -${distance}px, 0)`,
-        slideOutDown: `translate3d(0, ${distance}px, 0)`,
-      }
-
-      return api.start({
-        transform: transforms[direction as keyof typeof transforms] || transforms.slideOutLeft,
-        opacity: 0,
-        config,
-      })
-    },
-    [api]
-  )
-
-  return { styles, slideIn, slideOut, api }
-}
+// 控制器 Hook 已移至 src/hooks/animation/useSlideAnimation.ts
+// 请从那里导入 useSlideAnimation
 
 export default AnimationSlide

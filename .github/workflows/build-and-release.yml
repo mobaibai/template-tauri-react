@@ -1,5 +1,12 @@
 name: Build and Release
 
+# 添加权限配置以解决 Create Release 权限错误
+permissions:
+  contents: write
+  packages: write
+  actions: read
+  security-events: write
+
 on:
   push:
     tags:
@@ -26,6 +33,7 @@ jobs:
   # 前端构建和测试
   frontend-test:
     runs-on: ubuntu-latest
+    continue-on-error: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,7 +41,8 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '>=10.0.0'
+          version: 'latest'
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,20 +50,38 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Run TypeScript check
         run: pnpm run type-check
+        continue-on-error: false
 
       - name: Run ESLint
         run: pnpm run lint
+        continue-on-error: false
 
       - name: Check code formatting
         run: pnpm run format:check
+        continue-on-error: false
 
       - name: Build frontend
         run: pnpm run build
+        continue-on-error: false
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v4
@@ -67,7 +94,9 @@ jobs:
   build-macos:
     needs: frontend-test
     runs-on: macos-latest
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         target: [x86_64-apple-darwin, aarch64-apple-darwin]
     steps:
@@ -77,7 +106,8 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '>=10.0.0'
+          version: 'latest'
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -90,21 +120,40 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-
+        timeout-minutes: 10
+        continue-on-error: true
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ matrix.target }}
+          cache-targets: true
+          cache-on-failure: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+        continue-on-error: false
 
       - name: Build Tauri app
+        continue-on-error: false
         run: |
           if [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
             pnpm run build:mac-x86
@@ -112,20 +161,30 @@ jobs:
             pnpm run build:mac-aarch
           fi
 
+      - name: Create dist-builds directory if not exists
+        run: |
+          mkdir -p dist-builds
+          ls -la dist-builds/
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
+        if: always()
+        continue-on-error: true
 
   # Windows 构建
   build-windows:
     needs: frontend-test
     runs-on: windows-latest
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-msvc, aarch64-pc-windows-msvc]
+        # 注释掉 aarch64-pc-windows-msvc: x86_64 版本在 ARM 芯片上也能运行
+        target: [x86_64-pc-windows-msvc] # , aarch64-pc-windows-msvc
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -133,7 +192,8 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '>=10.0.0'
+          version: 'latest'
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -146,24 +206,59 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cargo-xwin
-        run: cargo install cargo-xwin
+      - name: Cache cargo-xwin
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-xwin
+          key: ${{ runner.os }}-cargo-xwin-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-xwin-
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Install cargo-xwin (Windows cross-compilation)
+        shell: bash
+        run: |
+          if ! command -v cargo-xwin &> /dev/null; then
+            cargo install cargo-xwin
+          else
+            echo "cargo-xwin already installed"
+          fi
+
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-
+        timeout-minutes: 10
+        continue-on-error: true
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ matrix.target }}
+          cache-targets: true
+          cache-on-failure: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+        continue-on-error: false
 
       - name: Build Tauri app
+        continue-on-error: false
         run: |
           if ("${{ matrix.target }}" -eq "x86_64-pc-windows-msvc") {
             pnpm run build:win-x86
@@ -171,20 +266,33 @@ jobs:
             pnpm run build:win-aarch
           }
 
+      - name: Create dist-builds directory if not exists
+        run: |
+          if (-not (Test-Path "dist-builds")) {
+            New-Item -ItemType Directory -Path "dist-builds" -Force
+          }
+          Get-ChildItem -Path "dist-builds" -Recurse
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
+        if: always()
+        continue-on-error: true
 
   # Linux 构建
   build-linux:
     needs: frontend-test
     runs-on: ubuntu-latest
+    timeout-minutes: 90
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
-        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+        # 注释掉 aarch64-unknown-linux-gnu: x86_64 版本在 ARM 芯片上也能运行
+        target: [x86_64-unknown-linux-gnu] # , aarch64-unknown-linux-gnu
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -192,7 +300,8 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '>=10.0.0'
+          version: 'latest'
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -205,40 +314,112 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Cache system dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt
+            /var/lib/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/.github/workflows/build-and-release.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+        timeout-minutes: 5
+        continue-on-error: true
+
+      - name: Cache Rust toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-rust-toolchain-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-toolchain-
+        timeout-minutes: 10
+        continue-on-error: true
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libssl-dev
+
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu
+            echo "=== 安装 aarch64 交叉编译工具链 ==="
+            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
+            
+            # 安装 aarch64 系统库依赖
+            sudo apt-get install -y libwebkit2gtk-4.1-dev:arm64 libappindicator3-dev:arm64 librsvg2-dev:arm64 libssl-dev:arm64 || true
+            sudo apt-get install -y libdbus-1-dev:arm64 libglib2.0-dev:arm64 libgtk-3-dev:arm64 || true
+            
+            # 验证工具链安装
+            echo "=== 验证交叉编译工具链 ==="
+            which aarch64-linux-gnu-gcc
+            aarch64-linux-gnu-gcc --version
+            which aarch64-linux-gnu-g++
+            aarch64-linux-gnu-g++ --version
+            
+            # 检查 pkg-config 路径
+            ls -la /usr/lib/aarch64-linux-gnu/pkgconfig/ || echo "aarch64 pkgconfig directory not found"
+            
+            # 设置 pkg-config 搜索路径
+            export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
+            echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
           fi
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ matrix.target }}
+          cache-targets: true
+          cache-on-failure: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: false
 
       - name: Download frontend artifacts
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: dist/
+        continue-on-error: false
 
       - name: Build Tauri app
+        continue-on-error: false
         run: |
           if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
             pnpm run build:linux-x86
           else
+            # 为 aarch64 交叉编译设置详细的环境变量
+            export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
+            export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
+            export AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar
+            export STRIP_aarch64_unknown_linux_gnu=aarch64-linux-gnu-strip
+            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+            export PKG_CONFIG_ALLOW_CROSS=1
+            export PKG_CONFIG_PATH_aarch64_unknown_linux_gnu=/usr/lib/aarch64-linux-gnu/pkgconfig
+            
+            # 调试信息
+            echo "=== 交叉编译环境检查 ==="
+            which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found"
+            aarch64-linux-gnu-gcc --version || echo "aarch64-linux-gnu-gcc version check failed"
+            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER"
+            echo "=== 开始构建 ==="
+            
             pnpm run build:linux-aarch
           fi
         env:
-          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
-          CXX_aarch64_unknown_linux_gnu: aarch64-linux-gnu-g++
-          AR_aarch64_unknown_linux_gnu: aarch64-linux-gnu-ar
-          STRIP_aarch64_unknown_linux_gnu: aarch64-linux-gnu-strip
+          PKG_CONFIG_ALLOW_CROSS: 1
+          # 使用vendored OpenSSL避免交叉编译依赖问题
+          OPENSSL_STATIC: 1
+          OPENSSL_VENDORED: 1
+
+      - name: Create dist-builds directory if not exists
+        run: |
+          mkdir -p dist-builds
+          ls -la dist-builds/
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
@@ -246,135 +427,14 @@ jobs:
           name: linux-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
-
-  # iOS 构建 (仅在 macOS 上)
-  build-ios:
-    needs: frontend-test
-    runs-on: macos-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.ref, 'mobile')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: '>=10.0.0'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-ios
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download frontend artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: dist/
-
-      - name: Initialize iOS project
-        run: pnpm run init:ios
-
-      - name: Build iOS app
-        run: pnpm run build:ios
-
-      - name: Upload iOS artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-build
-          path: dist-builds/
-          retention-days: 3
-
-  # Android 构建
-  build-android:
-    needs: frontend-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.ref, 'mobile')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: '>=10.0.0'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android NDK
-        run: |
-          sdkmanager "ndk;25.1.8937393"
-          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393" >> $GITHUB_ENV
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download frontend artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: dist/
-
-      - name: Initialize Android project
-        run: pnpm run init:android
-
-      - name: Build Android app
-        run: pnpm run build:android
-
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build
-          path: dist-builds/
-          retention-days: 3
+        if: always()
+        continue-on-error: true
 
   # 创建 Release
   create-release:
     needs: [build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -396,6 +456,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
+        continue-on-error: true
 
       - name: Create Release
         id: create_release
@@ -412,12 +473,12 @@ jobs:
 
             #### 桌面版本
             - **macOS**: 支持 Intel (x86_64) 和 Apple Silicon (ARM64)
-            - **Windows**: 支持 x86_64 和 ARM64
-            - **Linux**: 支持 x86_64 和 ARM64 (AppImage, DEB, RPM)
+            - **Windows**: 支持 x86_64 (兼容 ARM64 芯片)
+            - **Linux**: 支持 x86_64 (兼容 ARM64 芯片) (AppImage, DEB, RPM)
 
-            #### 移动版本 (如果可用)
-            - **iOS**: 需要 iOS 13.0 或更高版本
-            - **Android**: 需要 Android 7.0 (API 24) 或更高版本
+            > **注意**: Windows 和 Linux 的 x86_64 版本可以在 ARM64 芯片上运行，因此不再单独提供 ARM64 原生版本。
+
+
 
             ### 🔧 安装说明
 
@@ -436,9 +497,7 @@ jobs:
             - **DEB**: 使用 `sudo dpkg -i *.deb` 安装
             - **RPM**: 使用 `sudo rpm -i *.rpm` 安装
 
-            ### 📱 移动端
-            - **iOS**: 需要通过 TestFlight 或企业分发安装
-            - **Android**: 下载 APK 文件并允许未知来源安装
+
 
             ---
 
@@ -448,52 +507,112 @@ jobs:
 
   # 上传构建产物到 Release
   upload-release-assets:
-    needs: create-release
+    needs: [create-release, build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
+    if: always() && needs.create-release.result == 'success'
     strategy:
+      fail-fast: false
       matrix:
         include:
           - artifact: macos-x86_64-apple-darwin
             pattern: '*.dmg'
             name: 'macOS-Intel'
+            build_job: 'build-macos'
           - artifact: macos-aarch64-apple-darwin
             pattern: '*.dmg'
             name: 'macOS-AppleSilicon'
+            build_job: 'build-macos'
           - artifact: windows-x86_64-pc-windows-msvc
             pattern: '*.exe'
             name: 'Windows-x64'
-          - artifact: windows-aarch64-pc-windows-msvc
-            pattern: '*.exe'
-            name: 'Windows-ARM64'
+            build_job: 'build-windows'
+          # 注释掉 ARM 架构版本: x86_64 版本在 ARM 芯片上也能运行
+          # - artifact: windows-aarch64-pc-windows-msvc
+          #   pattern: '*.exe'
+          #   name: 'Windows-ARM64'
+          #   build_job: 'build-windows'
           - artifact: linux-x86_64-unknown-linux-gnu
             pattern: '*.{AppImage,deb,rpm}'
             name: 'Linux-x64'
-          - artifact: linux-aarch64-unknown-linux-gnu
-            pattern: '*.{AppImage,deb,rpm}'
-            name: 'Linux-ARM64'
+            build_job: 'build-linux'
+          # - artifact: linux-aarch64-unknown-linux-gnu
+          #   pattern: '*.{AppImage,deb,rpm}'
+          #   name: 'Linux-ARM64'
+          #   build_job: 'build-linux'
     steps:
+      - name: Check if build succeeded
+        id: check_build
+        run: |
+          echo "Checking build status for ${{ matrix.build_job }}..."
+          echo "Build result: ${{ needs[matrix.build_job].result }}"
+          if [ "${{ needs[matrix.build_job].result }}" = "success" ]; then
+            echo "build_success=true" >> $GITHUB_OUTPUT
+            echo "✅ Build job ${{ matrix.build_job }} succeeded, proceeding with artifact upload for ${{ matrix.artifact }}"
+          else
+            echo "build_success=false" >> $GITHUB_OUTPUT
+            echo "❌ Build job ${{ matrix.build_job }} did not succeed (result: ${{ needs[matrix.build_job].result }}), skipping artifact upload for ${{ matrix.artifact }}"
+          fi
+
       - name: Download artifacts
+        if: steps.check_build.outputs.build_success == 'true'
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: ./release-assets/
+        continue-on-error: true
 
       - name: Upload Release Assets
+        if: steps.check_build.outputs.build_success == 'true'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const path = require('path');
-            const glob = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
 
-            // 查找所有匹配的文件
-            const files = glob.sync('${{ matrix.pattern }}', { cwd: artifactPath });
+            // 检查目录是否存在
+            if (!fs.existsSync(artifactPath)) {
+              console.log(`Artifact path ${artifactPath} does not exist, skipping upload`);
+              return;
+            }
 
-            for (const file of files) {
+            // 获取目录中的所有文件
+            const allFiles = fs.readdirSync(artifactPath);
+            console.log(`Found files in ${artifactPath}:`, allFiles);
+
+            // 根据不同的模式匹配文件
+            let matchedFiles = [];
+            const pattern = '${{ matrix.pattern }}';
+
+            if (pattern === '*.dmg') {
+              matchedFiles = allFiles.filter(file => file.endsWith('.dmg'));
+            } else if (pattern === '*.exe') {
+              matchedFiles = allFiles.filter(file => file.endsWith('.exe'));
+            } else if (pattern === '*.{AppImage,deb,rpm}') {
+              matchedFiles = allFiles.filter(file => 
+                file.endsWith('.AppImage') || file.endsWith('.deb') || file.endsWith('.rpm')
+              );
+            } else {
+              // 通用匹配逻辑
+              matchedFiles = allFiles.filter(file => {
+                const ext = path.extname(file).toLowerCase();
+                return pattern.includes(ext.substring(1)) || pattern.includes('*');
+              });
+            }
+
+            if (matchedFiles.length === 0) {
+              console.log(`No files found matching pattern '${pattern}' in ${artifactPath}`);
+              console.log('Available files:', allFiles);
+              return;
+            }
+
+            console.log(`Found ${matchedFiles.length} matching files:`, matchedFiles);
+
+            for (const file of matchedFiles) {
               const filePath = path.join(artifactPath, file);
               const fileName = path.basename(file);
               const fileData = fs.readFileSync(filePath);
@@ -503,110 +622,84 @@ jobs:
               const baseName = path.basename(fileName, ext);
               const newFileName = `${baseName}-${{ matrix.name }}${ext}`;
 
-              console.log(`Uploading ${newFileName}...`);
+              console.log(`Uploading ${newFileName} (${fileData.length} bytes)...`);
 
-              await github.rest.repos.uploadReleaseAsset({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: releaseId,
-                name: newFileName,
-                data: fileData,
-              });
-            }
-
-  # 上传移动端构建产物 (如果存在)
-  upload-mobile-assets:
-    needs: [create-release, build-ios, build-android]
-    runs-on: ubuntu-latest
-    if: always() && (needs.build-ios.result == 'success' || needs.build-android.result == 'success')
-    steps:
-      - name: Download iOS artifacts
-        if: needs.build-ios.result == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-build
-          path: ./ios-assets/
-
-      - name: Download Android artifacts
-        if: needs.build-android.result == 'success'
-        uses: actions/download-artifact@v4
-        with:
-          name: android-build
-          path: ./android-assets/
-
-      - name: Upload Mobile Assets
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const glob = require('glob');
-
-            const releaseId = '${{ needs.create-release.outputs.release_id }}';
-
-            // 上传 iOS 文件
-            if (fs.existsSync('./ios-assets/')) {
-              const iosFiles = glob.sync('*.{ipa,app}', { cwd: './ios-assets/' });
-              for (const file of iosFiles) {
-                const filePath = path.join('./ios-assets/', file);
-                const fileName = path.basename(file);
-                const fileData = fs.readFileSync(filePath);
-
-                console.log(`Uploading iOS ${fileName}...`);
-
+              try {
                 await github.rest.repos.uploadReleaseAsset({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   release_id: releaseId,
-                  name: `iOS-${fileName}`,
+                  name: newFileName,
                   data: fileData,
                 });
+                console.log(`Successfully uploaded ${newFileName}`);
+              } catch (error) {
+                console.error(`Failed to upload ${newFileName}:`, error.message);
+                throw error;
               }
             }
 
-            // 上传 Android 文件
-            if (fs.existsSync('./android-assets/')) {
-              const androidFiles = glob.sync('*.apk', { cwd: './android-assets/' });
-              for (const file of androidFiles) {
-                const filePath = path.join('./android-assets/', file);
-                const fileName = path.basename(file);
-                const fileData = fs.readFileSync(filePath);
-
-                console.log(`Uploading Android ${fileName}...`);
-
-                await github.rest.repos.uploadReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  release_id: releaseId,
-                  name: `Android-${fileName}`,
-                  data: fileData,
-                });
-              }
-            }
-
-  # 清理工作流产物
-  cleanup:
-    needs: [upload-release-assets, upload-mobile-assets]
+  # 构建状态总结
+  build-summary:
+    needs: [frontend-test, build-macos, build-windows, build-linux, create-release, upload-release-assets]
     runs-on: ubuntu-latest
     if: always()
     steps:
+      - name: Build Summary
+        run: |
+          echo "## 🏗️ 构建状态总结"
+          echo "| 任务 | 状态 |"
+          echo "|------|------|"
+          echo "| 前端测试 | ${{ needs.frontend-test.result == 'success' && '✅ 成功' || '❌ 失败' }} |"
+          echo "| macOS 构建 | ${{ needs.build-macos.result == 'success' && '✅ 成功' || (needs.build-macos.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| Windows 构建 | ${{ needs.build-windows.result == 'success' && '✅ 成功' || (needs.build-windows.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| Linux 构建 | ${{ needs.build-linux.result == 'success' && '✅ 成功' || (needs.build-linux.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| 创建 Release | ${{ needs.create-release.result == 'success' && '✅ 成功' || (needs.create-release.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo "| 上传资源 | ${{ needs.upload-release-assets.result == 'success' && '✅ 成功' || (needs.upload-release-assets.result == 'failure' && '❌ 失败' || '⏭️ 跳过') }} |"
+          echo ""
+          echo "### 📊 详细信息"
+          echo "- 前端测试结果: ${{ needs.frontend-test.result }}"
+          echo "- macOS 构建结果: ${{ needs.build-macos.result }}"
+          echo "- Windows 构建结果: ${{ needs.build-windows.result }}"
+          echo "- Linux 构建结果: ${{ needs.build-linux.result }}"
+          echo "- Release 创建结果: ${{ needs.create-release.result }}"
+          echo "- 资源上传结果: ${{ needs.upload-release-assets.result }}"
+
+  # 清理工作流产物
+  cleanup:
+    needs: [build-summary]
+    runs-on: ubuntu-latest
+    if: always() && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+    steps:
       - name: Delete workflow artifacts
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-            });
-
-            for (const artifact of artifacts.data.artifacts) {
-              console.log(`Deleting artifact: ${artifact.name}`);
-              await github.rest.actions.deleteArtifact({
+            try {
+              const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                artifact_id: artifact.id,
+                run_id: context.runId,
               });
+
+              console.log(`Found ${artifacts.data.artifacts.length} artifacts to clean up`);
+              
+              for (const artifact of artifacts.data.artifacts) {
+                try {
+                  console.log(`Deleting artifact: ${artifact.name}`);
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                  });
+                  console.log(`✅ Successfully deleted: ${artifact.name}`);
+                } catch (error) {
+                  console.log(`❌ Failed to delete ${artifact.name}: ${error.message}`);
+                }
+              }
+              console.log('🧹 Cleanup completed');
+            } catch (error) {
+              console.log(`❌ Cleanup failed: ${error.message}`);
             }

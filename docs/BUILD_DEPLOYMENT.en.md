@@ -250,13 +250,29 @@ incremental = true
 
 ### Supported Platforms
 
-| Platform | Architecture  | Build Command                 | Output Format               |
-| -------- | ------------- | ----------------------------- | --------------------------- |
-| Windows  | x64           | `npm run build:windows-x64`   | `.msi`, `.exe`              |
-| Windows  | ARM64         | `npm run build:windows-arm64` | `.msi`, `.exe`              |
-| macOS    | Intel         | `npm run build:macos-x64`     | `.dmg`, `.app`              |
-| macOS    | Apple Silicon | `npm run build:macos-arm64`   | `.dmg`, `.app`              |
-| Linux    | x64           | `npm run build:linux-x64`     | `.deb`, `.rpm`, `.AppImage` |
+| Platform    | Architecture  | Build Command                     | Output Format                   | Notes                           |
+| ----------- | ------------- | --------------------------------- | ------------------------------- | ------------------------------- |
+| Windows     | x64           | `npm run build:windows-x64`       | `.msi`, `.exe`                  | Compatible with ARM64 chips     |
+| ~~Windows~~ | ~~ARM64~~     | ~~`npm run build:windows-arm64`~~ | ~~`.msi`, `.exe`~~              | **Removed**: x64 works on ARM64 |
+| macOS       | Intel         | `npm run build:macos-x64`         | `.dmg`, `.app`                  | Intel chips only                |
+| macOS       | Apple Silicon | `npm run build:macos-arm64`       | `.dmg`, `.app`                  | Apple Silicon chips only        |
+| Linux       | x64           | `npm run build:linux-x64`         | `.deb`, `.rpm`, `.AppImage`     | Compatible with ARM64 chips     |
+| ~~Linux~~   | ~~ARM64~~     | ~~`npm run build:linux-arm64`~~   | ~~`.deb`, `.rpm`, `.AppImage`~~ | **Removed**: x64 works on ARM64 |
+
+> **Important Changes**:
+>
+> - **Windows ARM64**: Removed dedicated ARM64 builds, x64 version runs well on
+>   ARM64 chips
+> - **Linux ARM64**: Removed dedicated ARM64 builds, x64 version runs well on
+>   ARM64 chips
+> - **macOS**: Keeping both native builds due to significant performance
+>   differences
+>
+> Benefits:
+>
+> - Reduced build time and maintenance cost
+> - Simplified distribution process
+> - x64 compatibility on ARM64 is sufficient
 
 ### Cross-Platform Build Script
 

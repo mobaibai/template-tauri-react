@@ -17,7 +17,7 @@ providing a complete solution for desktop application development.
 
 - 🚀 **Modern Tech Stack**: React 18 + TypeScript + Vite + Tauri 2.0
 - 🎨 **UI Framework**: Ant Design + UnoCSS Atomic CSS + SCSS
-- 🔧 **Development Tools**: ESLint + Prettier + Husky + VS Code Configuration
+- 🔧 **Development Tools**: ESLint + Prettier + VS Code Configuration
 - 📊 **State Management**: Zustand + SWR Data Fetching
 - 🎭 **Animation System**: Custom Animation Components + CSS3 Animations
 - 🌐 **Network Requests**: Encapsulated HTTP Client + Tauri IPC Communication
@@ -183,7 +183,6 @@ For detailed instructions, see [GitHub Actions Guide](GITHUB_ACTIONS.en.md)
 - [Frontend Build Optimization](frontend-build-optimization.en.md) - Frontend
   build optimization and edge case handling
 - [Cache Cleanup Guide](CACHE_CLEANUP.en.md) - Build cache management
-- [Husky Setup Guide](HUSKY_SETUP.en.md) - Git Hooks configuration and usage
 - [Troubleshooting Guide](TROUBLESHOOTING.en.md) - Common problem solutions
 
 ### API Reference
@@ -204,7 +203,6 @@ For detailed instructions, see [GitHub Actions Guide](GITHUB_ACTIONS.en.md)
 - [GitHub Actions CI/CD 指南](GITHUB_ACTIONS.md) - 自动化构建和发布流程
 - [前端构建优化与边界处理](frontend-build-optimization.md) - 前端构建优化和边界处理功能
 - [缓存清理指南](CACHE_CLEANUP.md) - 构建缓存管理
-- [Husky 配置指南](HUSKY_SETUP.md) - Git Hooks 配置和使用
 - [故障排除指南](TROUBLESHOOTING.md) - 常见问题解决方案
 
 ## 🤝 Contributing

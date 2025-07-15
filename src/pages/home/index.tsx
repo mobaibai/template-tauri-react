@@ -16,7 +16,7 @@ interface Props {
   title?: string
 }
 export const Home: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
 
   const { inc, cut, count } = useCountStore()
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)

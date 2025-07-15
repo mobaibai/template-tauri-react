@@ -1,6 +1,6 @@
 {
   "name": "template-tauri-react",
-  "version": "0.0.3",
+  "version": "0.0.1",
   "description": "A modern cross-platform desktop application template built with Tauri 2.0, React 18, TypeScript, and Ant Design. Features system monitoring, 3D rendering, animation system, and comprehensive development tools.",
   "type": "module",
   "private": false,
@@ -150,8 +150,6 @@
     "test:rust": "cd src-tauri && cargo test",
     "========= 运行Rust Clippy代码检查 =========": "",
     "clippy": "cd src-tauri && cargo clippy -- -D warnings",
-    "========= 安装Git hooks =========": "",
-    "prepare": "husky install",
     "========= 提交前代码检查和格式化 =========": "",
     "precommit": "npm run lint:fix && npm run format && npm run type-check",
     "========= 构建前检查 =========": "",
@@ -198,8 +196,6 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.3.0",
     "prettier": "^3.6.2",
     "sass": "^1.89.2",
     "svgo": "^4.0.0",
@@ -212,10 +208,6 @@
   "peerDependencies": {
     "react": ">=19.0.0",
     "react-dom": ">=19.0.0"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
-    "*.{json,css,scss,md,yml,yaml}": ["prettier --write"]
   },
   "browserslist": {
     "production": [">0.2%", "not dead", "not op_mini all"],

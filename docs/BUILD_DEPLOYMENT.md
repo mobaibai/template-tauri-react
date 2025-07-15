@@ -249,13 +249,26 @@ incremental = true
 
 ### 支持的平台
 
-| 平台    | 架构          | 构建命令                      | 输出格式                    |
-| ------- | ------------- | ----------------------------- | --------------------------- |
-| Windows | x64           | `npm run build:windows-x64`   | `.msi`, `.exe`              |
-| Windows | ARM64         | `npm run build:windows-arm64` | `.msi`, `.exe`              |
-| macOS   | Intel         | `npm run build:macos-x64`     | `.dmg`, `.app`              |
-| macOS   | Apple Silicon | `npm run build:macos-arm64`   | `.dmg`, `.app`              |
-| Linux   | x64           | `npm run build:linux-x64`     | `.deb`, `.rpm`, `.AppImage` |
+| 平台        | 架构          | 构建命令                          | 输出格式                        | 说明                         |
+| ----------- | ------------- | --------------------------------- | ------------------------------- | ---------------------------- |
+| Windows     | x64           | `npm run build:windows-x64`       | `.msi`, `.exe`                  | 兼容 ARM64 芯片              |
+| ~~Windows~~ | ~~ARM64~~     | ~~`npm run build:windows-arm64`~~ | ~~`.msi`, `.exe`~~              | **已移除**: x64版本兼容ARM64 |
+| macOS       | Intel         | `npm run build:macos-x64`         | `.dmg`, `.app`                  | Intel 芯片专用               |
+| macOS       | Apple Silicon | `npm run build:macos-arm64`       | `.dmg`, `.app`                  | Apple Silicon 芯片专用       |
+| Linux       | x64           | `npm run build:linux-x64`         | `.deb`, `.rpm`, `.AppImage`     | 兼容 ARM64 芯片              |
+| ~~Linux~~   | ~~ARM64~~     | ~~`npm run build:linux-arm64`~~   | ~~`.deb`, `.rpm`, `.AppImage`~~ | **已移除**: x64版本兼容ARM64 |
+
+> **重要变更说明**:
+>
+> - **Windows ARM64**: 已移除专用 ARM64 构建，x64 版本可在 ARM64 芯片上正常运行
+> - **Linux ARM64**: 已移除专用 ARM64 构建，x64 版本可在 ARM64 芯片上正常运行
+> - **macOS**: 保留两个架构的原生构建，因为性能差异显著
+>
+> 这样做的好处：
+>
+> - 减少构建时间和维护成本
+> - 简化分发流程
+> - x64 版本在 ARM64 上的兼容性已经足够好
 
 ### 跨平台构建脚本
 

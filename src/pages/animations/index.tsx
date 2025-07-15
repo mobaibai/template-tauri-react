@@ -7,7 +7,7 @@ interface Props {
   title?: string
 }
 const AnimationsPage: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
 
   return (
     <div className="animations-page h-screen overflow-y-auto overflow-x-hidden">

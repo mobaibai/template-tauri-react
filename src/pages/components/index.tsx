@@ -24,7 +24,7 @@ interface Props {
   title?: string
 }
 export const Components: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
   const location = useLocation()
   const navigate = useNavigate()
 

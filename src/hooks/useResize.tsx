@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 // 默认适配宽高
 export const width = 1920
@@ -33,7 +33,7 @@ export const useResize = (options: ResizeType = {}) => {
   const screenRef = useRef<HTMLElement | undefined | any>(undefined)
   const [scale, setScale] = useState<number>(1)
 
-  const resize = () => {
+  const resize = useCallback(() => {
     // 浏览器宽高
     const clientWidth = document.body.clientWidth
     const clientHeight = document.body.clientHeight
@@ -59,18 +59,19 @@ export const useResize = (options: ResizeType = {}) => {
         screenRef.current.style.transform = `scale(${clientWidth / clientHeight <= w / h ? scaleW : scaleH})`
       }
     }
-  }
+  }, [w, h, fullScreen])
 
   const resizeDelay = useRef(debounce(resize, delay))
 
   useEffect(() => {
     resize()
-    window.addEventListener('resize', resizeDelay.current)
+    const currentResizeHandler = resizeDelay.current
+    window.addEventListener('resize', currentResizeHandler)
 
     return () => {
-      window.removeEventListener('resize', resizeDelay.current)
+      window.removeEventListener('resize', currentResizeHandler)
     }
-  }, [])
+  }, [resize])
 
   return {
     scale,
@@ -81,7 +82,7 @@ export const useResize = (options: ResizeType = {}) => {
 /*
 用来返回防抖函数的工具函数
 */
-function debounce(callback: Function, delay: number) {
+function debounce(callback: (event?: Event) => void, delay: number) {
   let timerId: NodeJS.Timeout | null
   return function (event: Event) {
     // 如果上次事件还没有真正处理, 清除

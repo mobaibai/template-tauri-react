@@ -5,7 +5,7 @@ interface Props {
   title?: string
 }
 const Modal: React.FC<Props> = props => {
-  if (props.title) useTitle(props.title)
+  useTitle(props.title)
 
   const { popup, show } = usePopup({
     children: <div className="popup-content rainbow-text">这是一个全局弹窗</div>,
