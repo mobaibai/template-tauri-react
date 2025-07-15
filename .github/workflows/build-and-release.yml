@@ -539,7 +539,6 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const globModule = require('glob');
 
             const releaseId = '${{ needs.create-release.outputs.release_id }}';
             const artifactPath = './release-assets/';
@@ -550,15 +549,39 @@ jobs:
               return;
             }
 
-            // 查找所有匹配的文件
-            const files = await globModule.glob('${{ matrix.pattern }}', { cwd: artifactPath });
+            // 获取目录中的所有文件
+            const allFiles = fs.readdirSync(artifactPath);
+            console.log(`Found files in ${artifactPath}:`, allFiles);
 
-            if (files.length === 0) {
-              console.log(`No files found matching pattern '${{ matrix.pattern }}' in ${artifactPath}`);
+            // 根据不同的模式匹配文件
+            let matchedFiles = [];
+            const pattern = '${{ matrix.pattern }}';
+            
+            if (pattern === '*.dmg') {
+              matchedFiles = allFiles.filter(file => file.endsWith('.dmg'));
+            } else if (pattern === '*.exe') {
+              matchedFiles = allFiles.filter(file => file.endsWith('.exe'));
+            } else if (pattern === '*.{AppImage,deb,rpm}') {
+              matchedFiles = allFiles.filter(file => 
+                file.endsWith('.AppImage') || file.endsWith('.deb') || file.endsWith('.rpm')
+              );
+            } else {
+              // 通用匹配逻辑
+              matchedFiles = allFiles.filter(file => {
+                const ext = path.extname(file).toLowerCase();
+                return pattern.includes(ext.substring(1)) || pattern.includes('*');
+              });
+            }
+
+            if (matchedFiles.length === 0) {
+              console.log(`No files found matching pattern '${pattern}' in ${artifactPath}`);
+              console.log('Available files:', allFiles);
               return;
             }
 
-            for (const file of files) {
+            console.log(`Found ${matchedFiles.length} matching files:`, matchedFiles);
+
+            for (const file of matchedFiles) {
               const filePath = path.join(artifactPath, file);
               const fileName = path.basename(file);
               const fileData = fs.readFileSync(filePath);
@@ -568,15 +591,21 @@ jobs:
               const baseName = path.basename(fileName, ext);
               const newFileName = `${baseName}-${{ matrix.name }}${ext}`;
 
-              console.log(`Uploading ${newFileName}...`);
+              console.log(`Uploading ${newFileName} (${fileData.length} bytes)...`);
 
-              await github.rest.repos.uploadReleaseAsset({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: releaseId,
-                name: newFileName,
-                data: fileData,
-              });
+              try {
+                await github.rest.repos.uploadReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: releaseId,
+                  name: newFileName,
+                  data: fileData,
+                });
+                console.log(`Successfully uploaded ${newFileName}`);
+              } catch (error) {
+                console.error(`Failed to upload ${newFileName}:`, error.message);
+                throw error;
+              }
             }
 
   # 清理工作流产物
