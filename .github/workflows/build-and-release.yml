@@ -196,6 +196,7 @@ jobs:
         continue-on-error: true
 
       - name: Install cargo-xwin (Windows cross-compilation)
+        shell: bash
         run: |
           if ! command -v cargo-xwin &> /dev/null; then
             cargo install cargo-xwin
