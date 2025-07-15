@@ -529,20 +529,19 @@ function copyBuildArtifacts(platformName, config) {
       // Linux: 复制 .deb, .rpm, .AppImage 文件
       const debDir = path.join(config.sourceDir, 'deb')
       const rpmDir = path.join(config.sourceDir, 'rpm')
-      const appimageDir = path
-        .join(config.sourceDir, 'appimage')
+      const appimageDir = path.join(config.sourceDir, 'appimage')
 
-        [(debDir, rpmDir, appimageDir)].forEach(dir => {
-          if (fs.existsSync(dir)) {
-            const files = fs.readdirSync(dir)
-            files.forEach(file => {
-              const sourcePath = path.join(dir, file)
-              const targetPath = path.join(buildConfig.options.outputRoot, file)
-              execSync(`cp "${sourcePath}" "${targetPath}"`)
-              logSuccess(`已复制 ${file} 到 ${buildConfig.options.outputRoot}`)
-            })
-          }
-        })
+      ;[debDir, rpmDir, appimageDir].forEach(dir => {
+        if (fs.existsSync(dir)) {
+          const files = fs.readdirSync(dir)
+          files.forEach(file => {
+            const sourcePath = path.join(dir, file)
+            const targetPath = path.join(buildConfig.options.outputRoot, file)
+            execSync(`cp "${sourcePath}" "${targetPath}"`)
+            logSuccess(`已复制 ${file} 到 ${buildConfig.options.outputRoot}`)
+          })
+        }
+      })
     }
   }
 }
