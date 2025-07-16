@@ -12,7 +12,7 @@ on:
     tags:
       - 'v*'
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
   workflow_dispatch:
     inputs:
       release_type:
@@ -347,21 +347,21 @@ jobs:
           if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
             echo "=== 安装 aarch64 交叉编译工具链 ==="
             sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
-            
+
             # 安装 aarch64 系统库依赖
             sudo apt-get install -y libwebkit2gtk-4.1-dev:arm64 libappindicator3-dev:arm64 librsvg2-dev:arm64 libssl-dev:arm64 || true
             sudo apt-get install -y libdbus-1-dev:arm64 libglib2.0-dev:arm64 libgtk-3-dev:arm64 || true
-            
+
             # 验证工具链安装
             echo "=== 验证交叉编译工具链 ==="
             which aarch64-linux-gnu-gcc
             aarch64-linux-gnu-gcc --version
             which aarch64-linux-gnu-g++
             aarch64-linux-gnu-g++ --version
-            
+
             # 检查 pkg-config 路径
             ls -la /usr/lib/aarch64-linux-gnu/pkgconfig/ || echo "aarch64 pkgconfig directory not found"
-            
+
             # 设置 pkg-config 搜索路径
             export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
             echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
@@ -400,14 +400,14 @@ jobs:
             export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
             export PKG_CONFIG_ALLOW_CROSS=1
             export PKG_CONFIG_PATH_aarch64_unknown_linux_gnu=/usr/lib/aarch64-linux-gnu/pkgconfig
-            
+
             # 调试信息
             echo "=== 交叉编译环境检查 ==="
             which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found"
             aarch64-linux-gnu-gcc --version || echo "aarch64-linux-gnu-gcc version check failed"
             echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER"
             echo "=== 开始构建 ==="
-            
+
             pnpm run build:linux-aarch
           fi
         env:
@@ -593,7 +593,7 @@ jobs:
             } else if (pattern === '*.exe') {
               matchedFiles = allFiles.filter(file => file.endsWith('.exe'));
             } else if (pattern === '*.{AppImage,deb,rpm}') {
-              matchedFiles = allFiles.filter(file => 
+              matchedFiles = allFiles.filter(file =>
                 file.endsWith('.AppImage') || file.endsWith('.deb') || file.endsWith('.rpm')
               );
             } else {
@@ -693,7 +693,7 @@ jobs:
               });
 
               console.log(`Found ${artifacts.data.artifacts.length} artifacts to clean up`);
-              
+
               for (const artifact of artifacts.data.artifacts) {
                 try {
                   console.log(`Deleting artifact: ${artifact.name}`);
