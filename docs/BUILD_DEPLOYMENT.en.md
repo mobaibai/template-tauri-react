@@ -18,6 +18,19 @@ best practices.
 
 ## Build Overview
 
+This project supports multiple build approaches:
+
+- 🖥️ **Desktop Applications**: Windows, macOS, Linux (GitHub Actions automated
+  builds)
+- 📱 **Mobile Applications**: iOS, Android (local configuration and builds
+  required)
+- 🔄 **Automated Builds**: GitHub Actions CI/CD (desktop platforms only)
+- 🛠️ **Local Builds**: Development and testing environments
+
+> **⚠️ Important Note**: GitHub Actions workflow currently only supports
+> automated building and releasing for desktop platforms. Mobile platforms
+> (iOS/Android) require local environment configuration and building.
+
 ### Build Architecture
 
 ```
@@ -398,7 +411,7 @@ npm run ios:dev
         "developmentTeam": "YOUR_TEAM_ID",
         "bundleIdentifier": "com.example.tauri-react-template",
         "bundleVersion": "1",
-        "bundleShortVersionString": "1.0.0",
+        "bundleShortVersionString": "0.0.1",
         "minimumSystemVersion": "13.0"
       }
     }
@@ -441,7 +454,7 @@ npm run android:dev
       "android": {
         "packageName": "com.example.tauri_react_template",
         "versionCode": 1,
-        "versionName": "1.0.0",
+        "versionName": "0.0.1",
         "minSdkVersion": 24,
         "compileSdkVersion": 34,
         "targetSdkVersion": 34

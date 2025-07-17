@@ -80,7 +80,7 @@ npm run type-check       # TypeScript 类型检查
 
 # CI/CD (GitHub Actions)
 # 推送标签自动构建和发布
-git tag v1.0.0 && git push origin v1.0.0
+git tag v0.0.1 && git push origin v0.0.1
 ```
 
 ## 📁 项目结构
@@ -121,9 +121,12 @@ template-tauri-react/
 ### 🔄 自动化流程
 
 - ✅ **自动测试**：ESLint 检查、TypeScript 类型检查
-- 🏗️ **多平台构建**：macOS、Windows、Linux、iOS、Android
+- 🏗️ **多平台构建**：macOS、Windows、Linux（桌面平台）
 - 📦 **自动发布**：GitHub Releases 创建和构建产物上传
 - 🧹 **资源清理**：自动清理临时文件，节省存储空间
+
+> **⚠️ 重要说明**：当前 GitHub
+> Actions 工作流仅支持桌面平台（macOS、Windows、Linux）的自动构建和发布。如需构建 iOS 和 Android 应用，请参考相关文档进行本地化配置。
 
 ### 🎯 使用方法
 
@@ -131,8 +134,8 @@ template-tauri-react/
 
 ```bash
 # 创建版本标签并推送
-git tag v1.0.0
-git push origin v1.0.0
+git tag v0.0.1
+git push origin v0.0.1
 # 工作流自动运行，构建所有平台并发布
 ```
 

@@ -8,8 +8,8 @@ automatic building, testing, and releasing of multi-platform applications.
 ### Automation Pipeline
 
 - ✅ **Frontend Testing**: Automatic ESLint and TypeScript type checking
-- 🏗️ **Multi-platform Building**: Support for macOS, Windows, Linux, iOS,
-  Android
+- 🏗️ **Multi-platform Building**: Support for macOS, Windows, Linux (Desktop
+  platforms)
 - 📦 **Auto Release**: Automatic GitHub Releases creation and artifact upload
 - 🧹 **Resource Cleanup**: Automatic workflow artifact cleanup to save storage
 - 📋 **Package Management**: Uses pnpm (>=10.0.0) for fast and efficient
@@ -17,16 +17,22 @@ automatic building, testing, and releasing of multi-platform applications.
 
 ### Supported Platforms
 
-#### Desktop Platforms
+> **⚠️ Important Note**: The current GitHub Actions workflow only supports
+> automated building and releasing for desktop platforms. Mobile platform
+> (iOS/Android) builds require local configuration.
+
+#### Desktop Platforms (GitHub Actions Automated Builds)
 
 - **macOS**: Intel (x86_64) and Apple Silicon (ARM64)
 - **Windows**: x86_64 and ARM64
 - **Linux**: x86_64 and ARM64 (AppImage, DEB, RPM)
 
-#### Mobile Platforms
+#### Mobile Platforms (Local Configuration Required)
 
-- **iOS**: Support for iOS 13.0+
-- **Android**: Support for Android 7.0+ (API 24)
+- **iOS**: Requires macOS environment and Xcode, refer to iOS build
+  documentation
+- **Android**: Requires Android SDK and NDK, refer to Android build
+  documentation
 
 ## Prerequisites
 
@@ -63,7 +69,7 @@ The workflow automatically triggers on:
 
 1. **Push to main branch**: `push` to `main` or `master` branch
 2. **Pull Request**: PR targeting main branch
-3. **Tag push**: Push tags starting with `v` (e.g., `v1.0.0`)
+3. **Tag push**: Push tags starting with `v` (e.g., `v0.0.1`)
 4. **Manual trigger**: Manual run through GitHub interface
 
 ### Manual Trigger Options
@@ -170,8 +176,8 @@ When manually triggering through GitHub interface, you can choose:
 1. **Create and push tag**:
 
    ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
+   git tag v0.0.1
+   git push origin v0.0.1
    ```
 
 2. **Workflow runs automatically**:
@@ -218,11 +224,11 @@ Build artifacts are named according to:
 
 Examples:
 
-- `template-tauri-react-1.0.0-macOS-Intel.dmg`
-- `template-tauri-react-1.0.0-Windows-x64.exe`
-- `template-tauri-react-1.0.0-Linux-x64.AppImage`
-- `iOS-template-tauri-react-1.0.0.ipa`
-- `Android-template-tauri-react-1.0.0.apk`
+- `template-tauri-react-0.0.1-macOS-Intel.dmg`
+- `template-tauri-react-0.0.1-Windows-x64.exe`
+- `template-tauri-react-0.0.1-Linux-x64.AppImage`
+- `iOS-template-tauri-react-0.0.1.ipa`
+- `Android-template-tauri-react-0.0.1.apk`
 
 ### Download Locations
 

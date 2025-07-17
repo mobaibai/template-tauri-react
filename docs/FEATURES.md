@@ -37,7 +37,7 @@ React 项目的所有功能特性，包括前端界面、后端系统功能、�
 - **🎨 现代化 UI**: 基于 React 18 + TypeScript 构建
 - **⚡ 高性能**: Rust 后端提供原生级性能
 - **🔒 安全可靠**: Tauri 安全架构，权限精确控制
-- **📱 跨平台**: 支持 Windows、macOS、Linux、iOS、Android
+- **📱 跨平台**: 支持 Windows、macOS、Linux（自动构建）、iOS、Android（本地配置）
 - **🎭 主题系统**: 支持亮色/暗色主题切换
 - **🌐 网络功能**: 完整的 HTTP 请求支持
 - **📊 系统监控**: 实时系统信息获取

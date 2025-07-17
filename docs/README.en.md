@@ -85,7 +85,7 @@ npm run type-check       # TypeScript type check
 
 # CI/CD (GitHub Actions)
 # Push tag for automatic build and release
-git tag v1.0.0 && git push origin v1.0.0
+git tag v0.0.1 && git push origin v0.0.1
 ```
 
 ## 📁 Project Structure
@@ -133,9 +133,14 @@ This project includes a complete GitHub Actions CI/CD workflow that supports:
 ### 🔄 Automation Pipeline
 
 - ✅ **Automated Testing**: ESLint checks, TypeScript type checking
-- 🏗️ **Multi-platform Building**: macOS, Windows, Linux, iOS, Android
+- 🏗️ **Multi-platform Building**: macOS, Windows, Linux (Desktop platforms)
 - 📦 **Auto Release**: GitHub Releases creation and artifact upload
 - 🧹 **Resource Cleanup**: Automatic cleanup of temporary files to save storage
+
+> **⚠️ Important Note**: The current GitHub Actions workflow only supports
+> automated building and releasing for desktop platforms (macOS, Windows,
+> Linux). For iOS and Android app building, please refer to the relevant
+> documentation for local configuration.
 
 ### 🎯 Usage
 
@@ -143,8 +148,8 @@ This project includes a complete GitHub Actions CI/CD workflow that supports:
 
 ```bash
 # Create version tag and push
-git tag v1.0.0
-git push origin v1.0.0
+git tag v0.0.1
+git push origin v0.0.1
 # Workflow runs automatically, builds all platforms and releases
 ```
 

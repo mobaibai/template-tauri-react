@@ -39,7 +39,7 @@ animations, network requests, and 3D model display.
 - **⚡ High Performance**: Native-level performance with Rust backend
 - **🔒 Secure & Reliable**: Tauri security architecture with precise permission
   control
-- **📱 Cross-Platform**: Supports Windows, macOS, Linux, iOS, Android
+- **📱 Cross-Platform**: Supports Windows, macOS, Linux (automated builds), iOS, Android (local configuration)
 - **🎭 Theme System**: Light/dark theme switching support
 - **🌐 Network Features**: Complete HTTP request support
 - **📊 System Monitoring**: Real-time system information retrieval

@@ -15,6 +15,18 @@ React 项目的构建、打包和部署流程，包括各平台的特定配置�
 - [自动化部署](#自动化部署)
 - [故障排除](#故障排除)
 
+## 📋 构建概览
+
+本项目支持多种构建方式：
+
+- 🖥️ **桌面应用**：Windows、macOS、Linux（支持 GitHub Actions 自动构建）
+- 📱 **移动应用**：iOS、Android（需要本地配置和构建）
+- 🔄 **自动化构建**：GitHub Actions CI/CD（仅桌面平台）
+- 🛠️ **本地构建**：开发和测试环境
+
+> **⚠️ 重要说明**：GitHub
+> Actions 工作流目前仅支持桌面平台的自动构建和发布。移动平台（iOS/Android）需要在本地环境进行配置和构建。
+
 ## 构建概述
 
 ### 构建架构
@@ -394,7 +406,7 @@ npm run ios:dev
         "developmentTeam": "YOUR_TEAM_ID",
         "bundleIdentifier": "com.example.tauri-react-template",
         "bundleVersion": "1",
-        "bundleShortVersionString": "1.0.0",
+        "bundleShortVersionString": "0.0.1",
         "minimumSystemVersion": "13.0"
       }
     }
@@ -437,7 +449,7 @@ npm run android:dev
       "android": {
         "packageName": "com.example.tauri_react_template",
         "versionCode": 1,
-        "versionName": "1.0.0",
+        "versionName": "0.0.1",
         "minSdkVersion": 24,
         "compileSdkVersion": 34,
         "targetSdkVersion": 34
@@ -621,7 +633,18 @@ zipalign -v 4 app-release-unsigned.apk app-release.apk
 
 ## 自动化部署
 
-### GitHub Actions
+### 🤖 自动化部署
+
+#### GitHub Actions
+
+项目配置了完整的 CI/CD 流水线（仅桌面平台）：
+
+```yaml
+# 支持的平台
+platforms:
+  desktop: [macos, windows, linux] # 自动构建
+  mobile: [ios, android] # 需要本地配置
+```
 
 ```yaml
 # .github/workflows/build.yml
