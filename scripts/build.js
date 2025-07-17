@@ -728,9 +728,21 @@ function processAndroidArtifacts(platformName, config) {
 
 // 按平台类型分组构建
 function buildByPlatformType(platformType) {
-  const platforms = Object.entries(buildConfig.targets).filter(
+  let platforms = Object.entries(buildConfig.targets).filter(
     ([_, config]) => config.platform === platformType
   )
+
+  // 在 macOS 上构建 desktop 时，排除 Linux 平台（需要额外的交叉编译工具链）
+  if (platformType === 'desktop' && process.platform === 'darwin') {
+    platforms = platforms.filter(([name]) => !name.startsWith('linux-'))
+    if (
+      platforms.length <
+      Object.entries(buildConfig.targets).filter(([_, config]) => config.platform === platformType)
+        .length
+    ) {
+      logWarning('在 macOS 上跳过 Linux 平台构建（需要额外的交叉编译工具链配置）')
+    }
+  }
 
   if (platforms.length === 0) {
     logWarning(`没有找到 ${platformType} 平台配置`)

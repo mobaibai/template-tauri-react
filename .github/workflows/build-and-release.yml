@@ -259,14 +259,19 @@ jobs:
 
       - name: Build Tauri app
         continue-on-error: false
+        shell: pwsh
         run: |
           if ("${{ matrix.target }}" -eq "x86_64-pc-windows-msvc") {
             pnpm run build:win-x86
-          } else {
+          } elseif ("${{ matrix.target }}" -eq "aarch64-pc-windows-msvc") {
             pnpm run build:win-aarch
+          } else {
+            Write-Error "Unsupported Windows target: ${{ matrix.target }}"
+            exit 1
           }
 
       - name: Create dist-builds directory if not exists
+        shell: pwsh
         run: |
           if (-not (Test-Path "dist-builds")) {
             New-Item -ItemType Directory -Path "dist-builds" -Force
@@ -291,8 +296,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 注释掉 aarch64-unknown-linux-gnu: x86_64 版本在 ARM 芯片上也能运行
-        target: [x86_64-unknown-linux-gnu] # , aarch64-unknown-linux-gnu
+        # 添加 aarch64-unknown-linux-gnu 支持
+        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -474,9 +479,9 @@ jobs:
             #### 桌面版本
             - **macOS**: 支持 Intel (x86_64) 和 Apple Silicon (ARM64)
             - **Windows**: 支持 x86_64 (兼容 ARM64 芯片)
-            - **Linux**: 支持 x86_64 (兼容 ARM64 芯片) (AppImage, DEB, RPM)
+            - **Linux**: 支持 x86_64 和 ARM64 原生版本 (AppImage, DEB, RPM)
 
-            > **注意**: Windows 和 Linux 的 x86_64 版本可以在 ARM64 芯片上运行，因此不再单独提供 ARM64 原生版本。
+            > **注意**: Windows 的 x86_64 版本可以在 ARM64 芯片上运行。Linux 现在提供 ARM64 原生版本以获得更好的性能。
 
 
 
@@ -535,10 +540,10 @@ jobs:
             pattern: '*.{AppImage,deb,rpm}'
             name: 'Linux-x64'
             build_job: 'build-linux'
-          # - artifact: linux-aarch64-unknown-linux-gnu
-          #   pattern: '*.{AppImage,deb,rpm}'
-          #   name: 'Linux-ARM64'
-          #   build_job: 'build-linux'
+          - artifact: linux-aarch64-unknown-linux-gnu
+            pattern: '*.{AppImage,deb,rpm}'
+            name: 'Linux-ARM64'
+            build_job: 'build-linux'
     steps:
       - name: Check if build succeeded
         id: check_build
