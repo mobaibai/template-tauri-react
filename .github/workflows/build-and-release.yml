@@ -263,23 +263,27 @@ jobs:
       - name: Build Tauri app
         continue-on-error: false
         shell: pwsh
+        env:
+          TARGET_ARCH: ${{ matrix.target }}
         run: |
-          if ("${{ matrix.target }}" -eq "x86_64-pc-windows-msvc") {
+          if ($env:TARGET_ARCH -eq "x86_64-pc-windows-msvc") {
             pnpm run build:win-x86
-          } elseif ("${{ matrix.target }}" -eq "aarch64-pc-windows-msvc") {
+          } elseif ($env:TARGET_ARCH -eq "aarch64-pc-windows-msvc") {
             pnpm run build:win-aarch
           } else {
-            Write-Error "Unsupported Windows target: ${{ matrix.target }}"
+            Write-Error "Unsupported Windows target: $env:TARGET_ARCH"
             exit 1
           }
 
       - name: Debug - List build artifacts
         shell: pwsh
+        env:
+          TARGET_ARCH: ${{ matrix.target }}
         run: |
           Write-Host "=== Checking build output directories ==="
 
           # 检查主要的构建目录
-          $targetDir = "src-tauri/target/${{ matrix.target }}"
+          $targetDir = "src-tauri/target/$env:TARGET_ARCH"
           if (Test-Path $targetDir) {
             Write-Host "Contents of $targetDir:"
             Get-ChildItem -Path $targetDir -Recurse -Name | Sort-Object
@@ -311,6 +315,8 @@ jobs:
 
       - name: Create dist-builds directory and copy artifacts
         shell: pwsh
+        env:
+          TARGET_ARCH: ${{ matrix.target }}
         run: |
           # 创建输出目录
           if (-not (Test-Path "dist-builds")) {
@@ -318,7 +324,7 @@ jobs:
           }
 
           # 查找并复制构建产物
-          $targetDir = "src-tauri/target/${{ matrix.target }}/release"
+          $targetDir = "src-tauri/target/$env:TARGET_ARCH/release"
           $bundleDir = "$targetDir/bundle"
 
           Write-Host "Searching for build artifacts..."
@@ -388,8 +394,8 @@ jobs:
             # 搜索所有可能的构建产物
             $searchPaths = @(
               "src-tauri/target",
-              "src-tauri/target/${{ matrix.target }}",
-              "src-tauri/target/${{ matrix.target }}/release",
+              "src-tauri/target/$env:TARGET_ARCH",
+              "src-tauri/target/$env:TARGET_ARCH/release",
               "src-tauri/target/release"
             )
 
@@ -534,11 +540,13 @@ jobs:
         run: pnpm run build:linux-x86
 
       - name: Debug - List build artifacts
+        env:
+          TARGET_ARCH: ${{ matrix.target }}
         run: |
           echo "=== Checking build output directories ==="
 
           # 检查主要的构建目录
-          TARGET_DIR="src-tauri/target/${{ matrix.target }}"
+          TARGET_DIR="src-tauri/target/$TARGET_ARCH"
           if [ -d "$TARGET_DIR" ]; then
             echo "Contents of $TARGET_DIR:"
             find "$TARGET_DIR" -type f | sort
@@ -565,6 +573,8 @@ jobs:
         continue-on-error: true
 
       - name: Create dist-builds directory and copy artifacts
+        env:
+          TARGET_ARCH: ${{ matrix.target }}
         run: |
           # 创建输出目录
           mkdir -p dist-builds
@@ -572,7 +582,7 @@ jobs:
           echo "Searching for Linux build artifacts..."
 
           # 查找并复制构建产物
-          TARGET_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
+          TARGET_DIR="src-tauri/target/$TARGET_ARCH/release/bundle"
 
           # 查找 .deb 文件
           if [ -d "$TARGET_DIR/deb" ]; then
@@ -601,7 +611,7 @@ jobs:
           # 如果没有找到任何包文件，尝试查找可执行文件
           if [ -z "$(ls -A dist-builds 2>/dev/null)" ]; then
             echo "No package files found, looking for executable files..."
-            RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
+            RELEASE_DIR="src-tauri/target/$TARGET_ARCH/release"
             if [ -d "$RELEASE_DIR" ]; then
               find "$RELEASE_DIR" -maxdepth 1 -type f -executable -not -name "*.*" -exec cp {} dist-builds/ \;
               find "$RELEASE_DIR" -maxdepth 1 -type f -executable -not -name "*.*" -exec basename {} \; | while read file; do
