@@ -21,26 +21,24 @@ const buildConfig = {
       sourceDir: 'src-tauri/target/x86_64-pc-windows-msvc/release/bundle',
       platform: 'desktop',
     },
-    // 暂时禁用 Windows ARM64 构建，因为交叉编译环境配置复杂
-    // x86_64 版本可以在 ARM64 芯片上运行
     // 'win-aarch': {
     //   target: 'aarch64-pc-windows-msvc',
     //   runner: 'cargo-xwin',
     //   sourceDir: 'src-tauri/target/aarch64-pc-windows-msvc/release/bundle',
     //   platform: 'desktop',
     // },
-    'linux-x86': {
-      target: 'x86_64-unknown-linux-gnu',
-      runner: 'cargo',
-      sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
-      platform: 'desktop',
-    },
-    'linux-aarch': {
-      target: 'aarch64-unknown-linux-gnu',
-      runner: 'cargo',
-      sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
-      platform: 'desktop',
-    },
+    // 'linux-x86': {
+    //   target: 'x86_64-unknown-linux-gnu',
+    //   runner: 'cargo',
+    //   sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
+    //   platform: 'desktop',
+    // },
+    // 'linux-aarch': {
+    //   target: 'aarch64-unknown-linux-gnu',
+    //   runner: 'cargo',
+    //   sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
+    //   platform: 'desktop',
+    // },
 
     // 移动平台
     ios: {
