@@ -285,19 +285,19 @@ jobs:
           # 检查主要的构建目录
           $targetDir = "src-tauri/target/$env:TARGET_ARCH"
           if (Test-Path $targetDir) {
-            Write-Host "Contents of $targetDir:"
+            Write-Host "Contents of $($targetDir):"
             Get-ChildItem -Path $targetDir -Recurse -Name | Sort-Object
           } else {
-            Write-Host "Directory $targetDir does not exist"
+            Write-Host "Directory $($targetDir) does not exist"
           }
 
           # 检查 bundle 目录
           $bundleDir = "$targetDir/release/bundle"
           if (Test-Path $bundleDir) {
-            Write-Host "`nContents of $bundleDir:"
+            Write-Host "`nContents of $($bundleDir):"
             Get-ChildItem -Path $bundleDir -Recurse -Name | Sort-Object
           } else {
-            Write-Host "Directory $bundleDir does not exist"
+            Write-Host "Directory $($bundleDir) does not exist"
           }
 
           # 检查是否有 .exe 文件
@@ -328,12 +328,12 @@ jobs:
           $bundleDir = "$targetDir/bundle"
 
           Write-Host "Searching for build artifacts..."
-          Write-Host "Target directory: $targetDir"
-          Write-Host "Bundle directory: $bundleDir"
+          Write-Host "Target directory: $($targetDir)"
+          Write-Host "Bundle directory: $($bundleDir)"
 
           # 查找 .exe 安装程序（通常在 bundle/nsis 目录）
           $nsisDir = "$bundleDir/nsis"
-          Write-Host "Checking NSIS directory: $nsisDir"
+          Write-Host "Checking NSIS directory: $($nsisDir)"
           if (Test-Path $nsisDir) {
             Write-Host "NSIS directory exists, looking for .exe files..."
             Get-ChildItem -Path $nsisDir -Filter "*.exe" | ForEach-Object {
@@ -347,7 +347,7 @@ jobs:
 
           # 查找 .msi 安装程序（通常在 bundle/msi 目录）
           $msiDir = "$bundleDir/msi"
-          Write-Host "Checking MSI directory: $msiDir"
+          Write-Host "Checking MSI directory: $($msiDir)"
           if (Test-Path $msiDir) {
             Write-Host "MSI directory exists, looking for .msi files..."
             Get-ChildItem -Path $msiDir -Filter "*.msi" | ForEach-Object {
@@ -371,7 +371,7 @@ jobs:
                 Write-Host "Copied executable: $($_.Name) -> $destPath"
               }
             } else {
-              Write-Host "Target directory $targetDir does not exist"
+              Write-Host "Target directory $($targetDir) does not exist"
 
               # 尝试在整个 src-tauri/target 目录中查找可执行文件
               Write-Host "Searching for executables in entire target directory..."
@@ -401,7 +401,7 @@ jobs:
 
             foreach ($searchPath in $searchPaths) {
               if (Test-Path $searchPath) {
-                Write-Host "Searching in: $searchPath"
+                Write-Host "Searching in: $($searchPath)"
 
                 # 查找所有可能的Windows构建产物
                 $patterns = @("*.exe", "*.msi", "*.zip")
