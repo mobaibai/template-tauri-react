@@ -632,7 +632,7 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-x86_64
+          name: linux-${{ matrix.target }}
           path: dist-builds/
           retention-days: 3
         if: always()
@@ -739,7 +739,7 @@ jobs:
           #   pattern: '*.exe'
           #   name: 'Windows-ARM64'
           #   build_job: 'build-windows'
-          - artifact: linux-x86_64
+          - artifact: linux-x86_64-unknown-linux-gnu
             pattern: '*.{AppImage,deb,rpm}'
             name: 'Linux-x64'
             build_job: 'build-linux'
