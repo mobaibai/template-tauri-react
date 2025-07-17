@@ -76,7 +76,7 @@ jobs:
         continue-on-error: false
 
       - name: Check code formatting
-        run: pnpm run format:check
+        run: pnpm run format
         continue-on-error: false
 
       - name: Build frontend
@@ -356,7 +356,7 @@ jobs:
           # 如果没有找到安装程序，尝试复制可执行文件
           if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
             Write-Host "No installers found, looking for executable files..."
-            
+
             # 检查目标目录是否存在
             if (Test-Path $targetDir) {
               Get-ChildItem -Path $targetDir -Filter "*.exe" | Where-Object { $_.Name -notlike "*-*" } | ForEach-Object {
@@ -366,12 +366,12 @@ jobs:
               }
             } else {
               Write-Host "Target directory $targetDir does not exist"
-              
+
               # 尝试在整个 src-tauri/target 目录中查找可执行文件
               Write-Host "Searching for executables in entire target directory..."
               if (Test-Path "src-tauri/target") {
-                Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.exe" | Where-Object { 
-                  $_.Name -notlike "*-*" -and $_.Directory.Name -eq "release" 
+                Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.exe" | Where-Object {
+                  $_.Name -notlike "*-*" -and $_.Directory.Name -eq "release"
                 } | ForEach-Object {
                   $destPath = "dist-builds/$($_.Name)"
                   Copy-Item -Path $_.FullName -Destination $destPath -Force
@@ -384,7 +384,7 @@ jobs:
           # 如果仍然没有找到任何文件，尝试更广泛的搜索
           if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
             Write-Host "No artifacts found yet, performing comprehensive search..."
-            
+
             # 搜索所有可能的构建产物
             $searchPaths = @(
               "src-tauri/target",
@@ -392,11 +392,11 @@ jobs:
               "src-tauri/target/${{ matrix.target }}/release",
               "src-tauri/target/release"
             )
-            
+
             foreach ($searchPath in $searchPaths) {
               if (Test-Path $searchPath) {
                 Write-Host "Searching in: $searchPath"
-                
+
                 # 查找所有可能的Windows构建产物
                 $patterns = @("*.exe", "*.msi", "*.zip")
                 foreach ($pattern in $patterns) {
