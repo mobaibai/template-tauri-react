@@ -157,7 +157,6 @@ git push origin v1.0.0
 ### 平台特定
 
 - [Android 构建指南](docs/ANDROID_BUILD.md) - Android 平台构建配置
-- [Docker 开发环境](docs/DOCKER.md) - 容器化开发环境
 
 ### 工具和脚本
 
@@ -183,8 +182,6 @@ git push origin v1.0.0
 - [API Reference (EN)](docs/API_REFERENCE.en.md) - Complete API documentation
 - [Android Build Guide (EN)](docs/ANDROID_BUILD.en.md) - Android platform build
   configuration
-- [Docker Environment (EN)](docs/DOCKER.en.md) - Containerized development
-  environment
 - [GitHub Actions CI/CD Guide (EN)](docs/GITHUB_ACTIONS.en.md) - Automated build
   and release workflow
 - [Frontend Build Optimization (EN)](docs/frontend-build-optimization.en.md) -

@@ -348,11 +348,7 @@ target
    rustup target add aarch64-pc-windows-msvc
    ```
 
-3. **Use Docker for cross-platform builds:**
-   ```bash
-   # Refer to Docker build guide
-   docker build -t tauri-builder .
-   ```
+
 
 ### Issue 2: Code Signing Issues
 

@@ -109,9 +109,7 @@ temp/
 build/
 out/
 
-# Docker
-.dockerignore
-docker-compose.override.yml
+
 
 # Tauri specific
 .xwin-cache/

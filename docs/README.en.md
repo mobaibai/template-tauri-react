@@ -173,8 +173,6 @@ For detailed instructions, see [GitHub Actions Guide](GITHUB_ACTIONS.en.md)
 
 - [Android Build Guide](ANDROID_BUILD.en.md) - Android platform build
   configuration
-- [Docker Development Environment](DOCKER.en.md) - Containerized development
-  environment
 
 ### Tools and Scripts
 
@@ -199,7 +197,7 @@ For detailed instructions, see [GitHub Actions Guide](GITHUB_ACTIONS.en.md)
 - [功能特性说明](FEATURES.md) - 项目功能和特性介绍
 - [API 参考文档](API_REFERENCE.md) - 完整的 API 接口文档
 - [Android 构建指南](ANDROID_BUILD.md) - Android 平台构建配置
-- [Docker 开发环境](DOCKER.md) - 容器化开发环境
+
 - [GitHub Actions CI/CD 指南](GITHUB_ACTIONS.md) - 自动化构建和发布流程
 - [前端构建优化与边界处理](frontend-build-optimization.md) - 前端构建优化和边界处理功能
 - [缓存清理指南](CACHE_CLEANUP.md) - 构建缓存管理

@@ -345,11 +345,7 @@ error: failed to run custom build command for `openssl-sys v0.9.109`
    rustup target add aarch64-pc-windows-msvc
    ```
 
-3. **使用 Docker 进行跨平台构建：**
-   ```bash
-   # 参考 Docker 构建指南
-   docker build -t tauri-builder .
-   ```
+
 
 ### 问题 2: 代码签名问题
 
