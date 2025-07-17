@@ -427,7 +427,7 @@ jobs:
           } else {
             Write-Host "  (directory does not exist)"
           }
-          
+
           # 如果最终还是没有找到任何构建产物，输出详细的目录结构用于调试
           if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
             Write-Host "`n=== DEBUG: Complete target directory structure ==="
@@ -536,7 +536,7 @@ jobs:
       - name: Debug - List build artifacts
         run: |
           echo "=== Checking build output directories ==="
-          
+
           # 检查主要的构建目录
           TARGET_DIR="src-tauri/target/${{ matrix.target }}"
           if [ -d "$TARGET_DIR" ]; then
@@ -545,7 +545,7 @@ jobs:
           else
             echo "Directory $TARGET_DIR does not exist"
           fi
-          
+
           # 检查 bundle 目录
           BUNDLE_DIR="$TARGET_DIR/release/bundle"
           if [ -d "$BUNDLE_DIR" ]; then
@@ -555,7 +555,7 @@ jobs:
           else
             echo "Directory $BUNDLE_DIR does not exist"
           fi
-          
+
           # 检查是否有 Linux 包文件
           echo ""
           echo "=== Looking for Linux package files ==="
@@ -568,12 +568,12 @@ jobs:
         run: |
           # 创建输出目录
           mkdir -p dist-builds
-          
+
           echo "Searching for Linux build artifacts..."
-          
+
           # 查找并复制构建产物
           TARGET_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
-          
+
           # 查找 .deb 文件
           if [ -d "$TARGET_DIR/deb" ]; then
             find "$TARGET_DIR/deb" -name "*.deb" -exec cp {} dist-builds/ \;
@@ -581,7 +581,7 @@ jobs:
               echo "Copied DEB package: $file"
             done
           fi
-          
+
           # 查找 .rpm 文件
           if [ -d "$TARGET_DIR/rpm" ]; then
             find "$TARGET_DIR/rpm" -name "*.rpm" -exec cp {} dist-builds/ \;
@@ -589,7 +589,7 @@ jobs:
               echo "Copied RPM package: $file"
             done
           fi
-          
+
           # 查找 .AppImage 文件
           if [ -d "$TARGET_DIR/appimage" ]; then
             find "$TARGET_DIR/appimage" -name "*.AppImage" -exec cp {} dist-builds/ \;
@@ -597,7 +597,7 @@ jobs:
               echo "Copied AppImage: $file"
             done
           fi
-          
+
           # 如果没有找到任何包文件，尝试查找可执行文件
           if [ -z "$(ls -A dist-builds 2>/dev/null)" ]; then
             echo "No package files found, looking for executable files..."
@@ -609,7 +609,7 @@ jobs:
               done
             fi
           fi
-          
+
           # 显示最终结果
           echo ""
           echo "Final contents of dist-builds:"
