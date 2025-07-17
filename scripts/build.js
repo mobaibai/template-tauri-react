@@ -514,7 +514,12 @@ function copyBuildArtifacts(platformName, config) {
         })
       }
     } else if (platformName.startsWith('win')) {
-      // Windows: 复制 .exe 文件
+      // Windows: 复制安装程序文件
+      logStep('COPY', `查找 ${platformName} 构建产物...`)
+      
+      let artifactsCopied = false
+      
+      // 优先查找 NSIS 安装程序 (.exe)
       const nsisDir = path.join(config.sourceDir, 'nsis')
       if (fs.existsSync(nsisDir)) {
         const exeFiles = fs.readdirSync(nsisDir).filter(file => file.endsWith('.exe'))
@@ -522,8 +527,54 @@ function copyBuildArtifacts(platformName, config) {
           const sourcePath = path.join(nsisDir, exeFile)
           const targetPath = path.join(buildConfig.options.outputRoot, exeFile)
           execSync(`cp "${sourcePath}" "${targetPath}"`)
-          logSuccess(`已复制 ${exeFile} 到 ${buildConfig.options.outputRoot}`)
+          logSuccess(`已复制 NSIS 安装程序: ${exeFile}`)
+          artifactsCopied = true
         })
+      }
+      
+      // 查找 MSI 安装程序
+      const msiDir = path.join(config.sourceDir, 'msi')
+      if (fs.existsSync(msiDir)) {
+        const msiFiles = fs.readdirSync(msiDir).filter(file => file.endsWith('.msi'))
+        msiFiles.forEach(msiFile => {
+          const sourcePath = path.join(msiDir, msiFile)
+          const targetPath = path.join(buildConfig.options.outputRoot, msiFile)
+          execSync(`cp "${sourcePath}" "${targetPath}"`)
+          logSuccess(`已复制 MSI 安装程序: ${msiFile}`)
+          artifactsCopied = true
+        })
+      }
+      
+      // 如果没有找到安装程序，查找可执行文件
+      if (!artifactsCopied) {
+        logWarning('未找到安装程序，尝试查找可执行文件...')
+        const releaseDir = path.dirname(config.sourceDir)
+        if (fs.existsSync(releaseDir)) {
+          const exeFiles = fs.readdirSync(releaseDir).filter(file => 
+            file.endsWith('.exe') && !file.includes('-') // 排除临时文件
+          )
+          exeFiles.forEach(exeFile => {
+            const sourcePath = path.join(releaseDir, exeFile)
+            const targetPath = path.join(buildConfig.options.outputRoot, exeFile)
+            execSync(`cp "${sourcePath}" "${targetPath}"`)
+            logSuccess(`已复制可执行文件: ${exeFile}`)
+            artifactsCopied = true
+          })
+        }
+      }
+      
+      if (!artifactsCopied) {
+        logWarning(`${platformName}: 未找到任何构建产物`)
+        // 列出实际的目录结构用于调试
+        if (fs.existsSync(config.sourceDir)) {
+          logStep('DEBUG', `${config.sourceDir} 目录内容:`)
+          try {
+            const contents = execSync(`find "${config.sourceDir}" -type f`, { encoding: 'utf8' })
+            console.log(contents)
+          } catch (error) {
+            logWarning('无法列出目录内容')
+          }
+        }
       }
     } else if (platformName.startsWith('linux')) {
       // Linux: 复制 .deb, .rpm, .AppImage 文件

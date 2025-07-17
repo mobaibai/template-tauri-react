@@ -209,7 +209,10 @@ jobs:
       - name: Cache cargo-xwin
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/cargo-xwin
+          path: |
+            ~/.cargo/bin/cargo-xwin*
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
           key: ${{ runner.os }}-cargo-xwin-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-xwin-
@@ -270,13 +273,95 @@ jobs:
             exit 1
           }
 
-      - name: Create dist-builds directory if not exists
+      - name: Debug - List build artifacts
         shell: pwsh
         run: |
+          Write-Host "=== Checking build output directories ==="
+          
+          # 检查主要的构建目录
+          $targetDir = "src-tauri/target/${{ matrix.target }}"
+          if (Test-Path $targetDir) {
+            Write-Host "Contents of $targetDir:"
+            Get-ChildItem -Path $targetDir -Recurse -Name | Sort-Object
+          } else {
+            Write-Host "Directory $targetDir does not exist"
+          }
+          
+          # 检查 bundle 目录
+          $bundleDir = "$targetDir/release/bundle"
+          if (Test-Path $bundleDir) {
+            Write-Host "`nContents of $bundleDir:"
+            Get-ChildItem -Path $bundleDir -Recurse -Name | Sort-Object
+          } else {
+            Write-Host "Directory $bundleDir does not exist"
+          }
+          
+          # 检查是否有 .exe 文件
+          Write-Host "`n=== Looking for .exe files ==="
+          Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.exe" | ForEach-Object {
+            Write-Host "Found: $($_.FullName)"
+          }
+          
+          # 检查是否有 .msi 文件
+          Write-Host "`n=== Looking for .msi files ==="
+          Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.msi" | ForEach-Object {
+            Write-Host "Found: $($_.FullName)"
+          }
+        continue-on-error: true
+
+      - name: Create dist-builds directory and copy artifacts
+        shell: pwsh
+        run: |
+          # 创建输出目录
           if (-not (Test-Path "dist-builds")) {
             New-Item -ItemType Directory -Path "dist-builds" -Force
           }
-          Get-ChildItem -Path "dist-builds" -Recurse
+          
+          # 查找并复制构建产物
+          $targetDir = "src-tauri/target/${{ matrix.target }}/release"
+          $bundleDir = "$targetDir/bundle"
+          
+          Write-Host "Searching for build artifacts..."
+          
+          # 查找 .exe 安装程序（通常在 bundle/nsis 目录）
+          $nsisDir = "$bundleDir/nsis"
+          if (Test-Path $nsisDir) {
+            Get-ChildItem -Path $nsisDir -Filter "*.exe" | ForEach-Object {
+              $destPath = "dist-builds/$($_.Name)"
+              Copy-Item -Path $_.FullName -Destination $destPath -Force
+              Write-Host "Copied installer: $($_.Name) -> $destPath"
+            }
+          }
+          
+          # 查找 .msi 安装程序（通常在 bundle/msi 目录）
+          $msiDir = "$bundleDir/msi"
+          if (Test-Path $msiDir) {
+            Get-ChildItem -Path $msiDir -Filter "*.msi" | ForEach-Object {
+              $destPath = "dist-builds/$($_.Name)"
+              Copy-Item -Path $_.FullName -Destination $destPath -Force
+              Write-Host "Copied installer: $($_.Name) -> $destPath"
+            }
+          }
+          
+          # 如果没有找到安装程序，尝试复制可执行文件
+          if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
+            Write-Host "No installers found, looking for executable files..."
+            Get-ChildItem -Path $targetDir -Filter "*.exe" | Where-Object { $_.Name -notlike "*-*" } | ForEach-Object {
+              $destPath = "dist-builds/$($_.Name)"
+              Copy-Item -Path $_.FullName -Destination $destPath -Force
+              Write-Host "Copied executable: $($_.Name) -> $destPath"
+            }
+          }
+          
+          # 显示最终结果
+          Write-Host "`nFinal contents of dist-builds:"
+          if (Test-Path "dist-builds") {
+            Get-ChildItem -Path "dist-builds" -Recurse | ForEach-Object {
+              Write-Host "  $($_.Name) ($($_.Length) bytes)"
+            }
+          } else {
+            Write-Host "  (empty)"
+          }
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
