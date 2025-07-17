@@ -9,6 +9,19 @@
 这是一个功能完整的 **Tauri + React + TypeScript**
 桌面应用模板，集成了丰富的功能组件、动画效果、系统信息获取、网络请求、3D模型展示等特性。项目采用现代化的前后端分离架构，为桌面应用开发提供了完整的解决方案。
 
+### 🏗️ 技术架构
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React 前端    │───►│   Tauri 桥接    │───►│   Rust 后端     │
+│                 │    │                 │    │                 │
+│ • UI 组件       │    │ • 命令路由      │    │ • 系统 API      │
+│ • 状态管理      │    │ • 事件分发      │    │ • 文件操作      │
+│ • 路由导航      │    │ • 类型转换      │    │ • 网络请求      │
+│ • 动画效果      │    │ • 安全验证      │    │ • 业务逻辑      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
 ### ✨ 核心特性
 
 - 🚀 **现代化技术栈**：React 18 + TypeScript + Vite + Tauri 2.0
@@ -21,7 +34,28 @@
 - 🎮 **3D 渲染**：Three.js 模型展示支持
 - 🔒 **类型安全**：完整的 TypeScript 支持
 - ⚡ **高性能**：Rust 后端 + 原生系统调用
-- 🤖 **CI/CD 自动化**：GitHub Actions 多平台构建和自动发布
+- 🤖 **CI/CD 自动化**：GitHub Actions 自动构建和发布
+
+### 🎬 界面功能
+
+- **首页展示**: 项目介绍和功能导航
+- **组件库**: 丰富的 UI 组件展示
+- **动画系统**: 流畅的交互动画和过渡效果
+- **网络功能**: HTTP 请求和 API 调用示例
+- **3D 模型**: 3D 模型加载和展示
+- **系统监控**: 实时系统信息获取和展示
+- **文件操作**: 安全的文件读写功能
+- **主题切换**: 支持亮色/暗色主题
+
+### 🛠️ 开发特性
+
+- **类型安全**: 完整的 TypeScript 支持
+- **热重载**: 开发时快速刷新
+- **代码规范**: ESLint + Prettier 自动格式化
+- **Git 钩子**: 提交前自动检查和格式化
+- **模块化**: 清晰的项目结构和组件划分
+- **错误处理**: 统一的错误处理机制
+- **性能优化**: 代码分割和懒加载
 
 ## 🎯 支持平台
 
@@ -67,11 +101,10 @@ npm run build:tauri      # 构建桌面应用
 npm run build:ios        # 构建 iOS 应用
 npm run build:android    # 构建 Android 应用
 
-# 跨平台构建
-npm run build:mac-x86    # macOS Intel
-npm run build:mac-aarch  # macOS Apple Silicon
-npm run build:win-x86    # Windows x64
-npm run build:win-aarch  # Windows ARM64
+# 本地构建
+npm run build:tauri      # 当前系统桌面应用
+
+# 注意：PC端跨平台构建已由GitHub Actions自动处理
 
 # 代码质量
 npm run lint             # ESLint 检查
@@ -121,7 +154,7 @@ template-tauri-react/
 ### 🔄 自动化流程
 
 - ✅ **自动测试**：ESLint 检查、TypeScript 类型检查
-- 🏗️ **多平台构建**：macOS、Windows、Linux（桌面平台）
+- 🏗️ **自动化构建**：GitHub Actions处理跨平台构建和发布
 - 📦 **自动发布**：GitHub Releases 创建和构建产物上传
 - 🧹 **资源清理**：自动清理临时文件，节省存储空间
 
@@ -150,47 +183,18 @@ git push origin v0.0.1
 
 ## 📚 文档
 
-### 开发指南
+### 核心文档
 
 - [环境配置指南](docs/ENVIRONMENT_SETUP.md) - 详细的环境配置说明
-- [开发指南](docs/DEVELOPMENT_GUIDE.md) - 开发流程和最佳实践
-- [构建部署指南](docs/BUILD_DEPLOYMENT.md) - 跨平台构建和部署
-- [功能特性说明](docs/FEATURES.md) - 项目功能和特性介绍
-
-### 平台特定
-
-- [Android 构建指南](docs/ANDROID_BUILD.md) - Android 平台构建配置
-
-### 工具和脚本
-
-- [GitHub Actions CI/CD 指南](docs/GITHUB_ACTIONS.md) - 自动化构建和发布流程
-- [前端构建优化与边界处理](docs/frontend-build-optimization.md) - 前端构建优化和边界处理功能
-- [缓存清理指南](docs/CACHE_CLEANUP.md) - 构建缓存管理
-- [故障排除指南](docs/TROUBLESHOOTING.md) - 常见问题解决方案
-
-### API 参考
-
-- [API 参考文档](docs/API_REFERENCE.md) - 完整的 API 接口文档
+- [开发指南](docs/DEVELOPMENT_GUIDE.md) - 开发流程、API参考和故障排除
+- [构建部署指南](docs/BUILD_DEPLOYMENT.md) - 本地构建、CI/CD和移动端部署
 
 ### 英文文档
 
 - [English README](docs/README.en.md) - English version of main documentation
-- [Environment Setup (EN)](docs/ENVIRONMENT_SETUP.en.md) - Environment
-  configuration guide
-- [Development Guide (EN)](docs/DEVELOPMENT_GUIDE.en.md) - Development workflow
-  and best practices
-- [Build & Deployment (EN)](docs/BUILD_DEPLOYMENT.en.md) - Cross-platform build
-  and deployment
-- [Features (EN)](docs/FEATURES.en.md) - Project features and capabilities
-- [API Reference (EN)](docs/API_REFERENCE.en.md) - Complete API documentation
-- [Android Build Guide (EN)](docs/ANDROID_BUILD.en.md) - Android platform build
-  configuration
-- [GitHub Actions CI/CD Guide (EN)](docs/GITHUB_ACTIONS.en.md) - Automated build
-  and release workflow
-- [Frontend Build Optimization (EN)](docs/frontend-build-optimization.en.md) -
-  Frontend build optimization and edge case handling
-- [Cache Cleanup (EN)](docs/CACHE_CLEANUP.en.md) - Build cache management
-- [Troubleshooting (EN)](docs/TROUBLESHOOTING.en.md) - Common problem solutions
+- [Environment Setup (EN)](docs/ENVIRONMENT_SETUP.en.md) - Environment configuration guide
+- [Development Guide (EN)](docs/DEVELOPMENT_GUIDE.en.md) - Development workflow and best practices
+- [Build & Deployment (EN)](docs/BUILD_DEPLOYMENT.en.md) - Local build and deployment guide
 
 ## 🤝 贡献
 

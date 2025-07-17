@@ -50,38 +50,37 @@ git clone <repository-url>
 cd template-tauri-react
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Check environment
-npm run check:env
+pnpm run check:env
 
 # 4. Start development server
-npm run dev:tauri
+pnpm run dev:tauri
 ```
 
 ### Common Commands
 
 ```bash
 # Development
-npm run dev:tauri        # Start Tauri development mode
-npm run dev:ios          # iOS development mode
-npm run dev:android      # Android development mode
+pnpm run dev:tauri        # Start Tauri development mode
+pnpm run dev:ios          # iOS development mode
+pnpm run dev:android      # Android development mode
 
 # Build
-npm run build:tauri      # Build desktop application
-npm run build:ios        # Build iOS application
-npm run build:android    # Build Android application
+pnpm run build:tauri      # Build desktop application
+pnpm run build:ios        # Build iOS application
+pnpm run build:android    # Build Android application
 
-# Cross-platform build
-npm run build:mac-x86    # macOS Intel
-npm run build:mac-aarch  # macOS Apple Silicon
-npm run build:win-x86    # Windows x64
-npm run build:win-aarch  # Windows ARM64
+# Local build
+pnpm run build:tauri      # Current system desktop app
+
+# Note: PC cross-platform builds are handled by GitHub Actions
 
 # Code quality
-npm run lint             # ESLint check
-npm run format           # Prettier formatting
-npm run type-check       # TypeScript type check
+pnpm run lint             # ESLint check
+pnpm run format           # Prettier formatting
+pnpm run type-check       # TypeScript type check
 
 # CI/CD (GitHub Actions)
 # Push tag for automatic build and release
@@ -164,49 +163,18 @@ For detailed instructions, see [GitHub Actions Guide](GITHUB_ACTIONS.en.md)
 
 ## 📚 Documentation
 
-### Development Guides
+### Core Documentation
 
-- [Environment Setup Guide](ENVIRONMENT_SETUP.en.md) - Detailed environment
-  configuration instructions
-- [Development Guide](DEVELOPMENT_GUIDE.en.md) - Development workflow and best
-  practices
-- [Build & Deployment Guide](BUILD_DEPLOYMENT.en.md) - Cross-platform build and
-  deployment
-- [Features Documentation](FEATURES.en.md) - Project features and capabilities
-
-### Platform Specific
-
-- [Android Build Guide](ANDROID_BUILD.en.md) - Android platform build
-  configuration
-
-### Tools and Scripts
-
-- [GitHub Actions CI/CD Guide](GITHUB_ACTIONS.en.md) - Automated build and
-  release workflow
-- [Frontend Build Optimization](frontend-build-optimization.en.md) - Frontend
-  build optimization and edge case handling
-- [Cache Cleanup Guide](CACHE_CLEANUP.en.md) - Build cache management
-- [Troubleshooting Guide](TROUBLESHOOTING.en.md) - Common problem solutions
-
-### API Reference
-
-- [API Reference Documentation](API_REFERENCE.en.md) - Complete API interface
-  documentation
+- [Environment Setup Guide](ENVIRONMENT_SETUP.en.md) - Detailed environment configuration instructions
+- [Development Guide](DEVELOPMENT_GUIDE.en.md) - Development workflow, API reference and troubleshooting
+- [Build & Deployment Guide](BUILD_DEPLOYMENT.en.md) - Local build, CI/CD and mobile deployment
 
 ### Chinese Documentation
 
 - [中文 README](../README.md) - 主要文档的中文版本
 - [环境配置指南](ENVIRONMENT_SETUP.md) - 环境配置说明
-- [开发指南](DEVELOPMENT_GUIDE.md) - 开发流程和最佳实践
-- [构建部署指南](BUILD_DEPLOYMENT.md) - 跨平台构建和部署
-- [功能特性说明](FEATURES.md) - 项目功能和特性介绍
-- [API 参考文档](API_REFERENCE.md) - 完整的 API 接口文档
-- [Android 构建指南](ANDROID_BUILD.md) - Android 平台构建配置
-
-- [GitHub Actions CI/CD 指南](GITHUB_ACTIONS.md) - 自动化构建和发布流程
-- [前端构建优化与边界处理](frontend-build-optimization.md) - 前端构建优化和边界处理功能
-- [缓存清理指南](CACHE_CLEANUP.md) - 构建缓存管理
-- [故障排除指南](TROUBLESHOOTING.md) - 常见问题解决方案
+- [开发指南](DEVELOPMENT_GUIDE.md) - 开发流程、API参考和故障排除
+- [构建部署指南](BUILD_DEPLOYMENT.md) - 本地构建、CI/CD和移动端部署
 
 ## 🤝 Contributing
 

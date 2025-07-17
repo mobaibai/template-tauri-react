@@ -195,7 +195,7 @@ async function cleanAndRebuild() {
 
     // 重新安装依赖
     logInfo('重新安装依赖...')
-    execSync('yarn install', { cwd: projectRoot, stdio: 'inherit' })
+    execSync('pnpm install', { cwd: projectRoot, stdio: 'inherit' })
 
     logSuccess('清理和重新构建完成')
   } catch (error) {
@@ -211,7 +211,7 @@ async function main() {
     console.log('\n🎉 OpenSSL 修复完成！')
     console.log('\n📝 接下来的步骤:')
     console.log('1. 重新启动终端或运行 source ~/.zshrc (macOS)')
-    console.log('2. 运行 yarn dev:android:safe 测试修复效果')
+    console.log('2. 运行 pnpm dev:android:safe 测试修复效果')
     console.log('3. 如果仍有问题，请查看 docs/TROUBLESHOOTING.md')
   } catch (error) {
     logError(`修复过程中出现错误: ${error.message}`)
@@ -224,4 +224,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   main()
 }
 
-export { fixOpenSSLIssues, fixMacOSOpenSSL, fixLinuxOpenSSL, verifyCargoConfig, cleanAndRebuild }
+export { cleanAndRebuild, fixLinuxOpenSSL, fixMacOSOpenSSL, fixOpenSSLIssues, verifyCargoConfig }

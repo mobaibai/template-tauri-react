@@ -9,7 +9,7 @@ platforms.
 - [Basic Requirements](#basic-requirements)
 - [Desktop Platform Setup](#desktop-platform-setup)
 - [Mobile Platform Setup](#mobile-platform-setup)
-- [Cross-Platform Build Setup](#cross-platform-build-setup)
+
 - [Development Tools Setup](#development-tools-setup)
 - [Environment Verification](#environment-verification)
 - [Common Issues](#common-issues)
@@ -306,15 +306,9 @@ sudo pacman -S \
    adb devices
    ```
 
-## Cross-Platform Build Setup
+## Local Build Setup
 
-### Building Windows Apps on macOS/Linux
-
-1. **Install cargo-xwin**:
-
-   ```bash
-   cargo install --locked cargo-xwin
-   ```
+> **Note**: PC cross-platform builds are handled by GitHub Actions. Local setup only needs to support current system builds.
 
 2. **Install NSIS (for creating installers)**:
 

@@ -366,8 +366,8 @@ function buildPlatform(platformName, config) {
       // 移动端构建命令
       buildCommand = `tauri ${config.buildCommand}`
     } else {
-      // 桌面端构建命令
-      buildCommand = `tauri build --runner ${config.runner} --target ${config.target}`
+      // 桌面端构建命令（当前系统默认构建）
+      buildCommand = `tauri build`
     }
 
     logStep('TAURI', `执行: ${buildCommand}`)
@@ -783,18 +783,6 @@ function buildByPlatformType(platformType) {
     ([_, config]) => config.platform === platformType
   )
 
-  // 在 macOS 上构建 desktop 时，排除 Linux 平台（需要额外的交叉编译工具链）
-  if (platformType === 'desktop' && process.platform === 'darwin') {
-    platforms = platforms.filter(([name]) => !name.startsWith('linux-'))
-    if (
-      platforms.length <
-      Object.entries(buildConfig.targets).filter(([_, config]) => config.platform === platformType)
-        .length
-    ) {
-      logWarning('在 macOS 上跳过 Linux 平台构建（需要额外的交叉编译工具链配置）')
-    }
-  }
-
   if (platforms.length === 0) {
     logWarning(`没有找到 ${platformType} 平台配置`)
     return
@@ -815,16 +803,16 @@ function showHelp() {
   )
   const mobilePlatforms = platforms.filter(name => buildConfig.targets[name].platform === 'mobile')
 
-  console.log('\n🚀 Tauri 多平台构建工具')
+  console.log('\n🚀 Tauri 本地构建工具')
   console.log('\n用法:')
   console.log('  node scripts/build.js [平台名称|平台类型]')
   console.log('\n平台类型:')
-  console.log('  desktop    - 构建所有桌面平台')
-  console.log('  mobile     - 构建所有移动平台')
+  console.log('  desktop    - 构建当前系统桌面应用')
+  console.log('  mobile     - 构建移动平台应用')
   console.log('\n可用平台:')
 
   if (desktopPlatforms.length > 0) {
-    console.log('  桌面平台:', desktopPlatforms.join(', '))
+    console.log('  桌面平台:', desktopPlatforms.join(', '), '(当前系统)')
   }
 
   if (mobilePlatforms.length > 0) {
@@ -833,9 +821,11 @@ function showHelp() {
 
   console.log('\n示例:')
   console.log('  node scripts/build.js                    # 构建所有平台')
-  console.log('  node scripts/build.js desktop            # 构建所有桌面平台')
-  console.log('  node scripts/build.js mobile             # 构建所有移动平台')
-  console.log('  node scripts/build.js mac-x86            # 构建指定平台')
+  console.log('  node scripts/build.js desktop            # 构建当前系统桌面应用')
+  console.log('  node scripts/build.js mobile             # 构建移动平台应用')
+  console.log('  node scripts/build.js current-desktop    # 构建当前系统桌面应用')
+  console.log('')
+  console.log('注意: PC端跨平台构建已通过GitHub Actions处理，本地只需构建当前系统版本')
   console.log('')
 }
 
@@ -850,7 +840,7 @@ function main() {
     return
   }
 
-  log('🚀 Tauri 多平台构建工具', 'bright')
+  log('🚀 Tauri 本地构建工具', 'bright')
   log('================================', 'blue')
 
   try {

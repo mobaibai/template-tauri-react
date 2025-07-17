@@ -115,7 +115,9 @@ npm run build
 # 生产构建
 npm run build:tauri
 
-# 跨平台构建
+# 本地构建
+
+> **注意**：PC端跨平台构建已由GitHub Actions处理，本地只需构建当前系统版本。
 npm run build:all
 ```
 
@@ -785,6 +787,243 @@ export const useTheme = () => {
 }
 ```
 
+## API 参考
+
+### 前后端通信架构
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React 前端    │───►│   Tauri 桥接    │───►│   Rust 后端     │
+│                 │    │                 │    │                 │
+│ • invoke()      │    │ • 命令路由      │    │ • 命令处理器    │
+│ • listen()      │    │ • 事件分发      │    │ • 事件发射器    │
+│ • emit()        │    │ • 类型转换      │    │ • 业务逻辑      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### 核心 API
+
+#### 系统信息 API
+
+```typescript
+// 获取系统架构
+const arch = await invoke<string>('get_system_arch')
+
+// 获取操作系统
+const os = await invoke<string>('get_system_os')
+
+// 获取完整系统信息
+interface SystemInfo {
+  arch: string
+  os: string
+  version: string
+  cpu_count: number
+  total_memory: number
+}
+
+const systemInfo = await invoke<SystemInfo>('get_system_info')
+```
+
+```rust
+// 后端实现
+#[tauri::command]
+pub fn get_system_arch() -> String {
+    std::env::consts::ARCH.to_string()
+}
+
+#[derive(Debug, Serialize)]
+pub struct SystemInfo {
+    pub arch: String,
+    pub os: String,
+    pub version: String,
+    pub cpu_count: usize,
+    pub total_memory: u64,
+}
+
+#[tauri::command]
+pub fn get_system_info() -> SystemInfo {
+    // 实现细节...
+}
+```
+
+#### 文件操作 API
+
+```typescript
+// 读取文件
+interface FileReadRequest {
+  path: string
+}
+
+interface FileReadResponse {
+  content: string
+  size: number
+}
+
+const response = await invoke<FileReadResponse>('read_file_content', {
+  request: { path: '/path/to/file.txt' }
+})
+
+// 写入文件
+interface FileWriteRequest {
+  path: string
+  content: string
+  create_dirs?: boolean
+}
+
+await invoke<void>('write_file_content', {
+  request: {
+    path: '/path/to/file.txt',
+    content: 'Hello, World!',
+    create_dirs: true
+  }
+})
+```
+
+#### 窗口管理 API
+
+```typescript
+// 创建加载窗口
+await invoke<void>('create_loading_window')
+
+// 通知加载完成
+await invoke<void>('notify_loading_ready')
+
+// 更新窗口标题
+interface UpdateTitleRequest {
+  title: string
+  window_label?: string
+}
+
+await invoke<void>('update_window_title', {
+  request: { title: '新标题', window_label: 'main' }
+})
+```
+
+#### 网络请求 API
+
+```typescript
+// HTTP 请求
+interface HttpConfig {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+  url: string
+  headers?: Record<string, string>
+  body?: string
+  timeout?: number
+}
+
+interface HttpResponse {
+  status: number
+  headers: Record<string, string>
+  body: string
+}
+
+const response = await invoke<HttpResponse>('make_http_request', {
+  config: {
+    method: 'GET',
+    url: 'https://api.example.com/data',
+    headers: { 'Authorization': 'Bearer token' },
+    timeout: 30000
+  }
+})
+```
+
+### 事件系统
+
+#### 前端监听事件
+
+```typescript
+import { listen } from '@tauri-apps/api/event'
+
+// 监听系统事件
+const unlisten = await listen('system-info-updated', event => {
+  console.log('系统信息更新:', event.payload)
+})
+
+// 监听文件变化事件
+const unlistenFile = await listen('file-changed', event => {
+  console.log('文件变化:', event.payload)
+})
+
+// 取消监听
+unlisten()
+unlistenFile()
+```
+
+#### 后端发送事件
+
+```rust
+// 发送事件到前端
+#[tauri::command]
+pub async fn trigger_system_update(window: tauri::Window) -> Result<(), String> {
+    let system_info = get_system_info();
+    
+    window.emit("system-info-updated", &system_info)
+        .map_err(|e| format!("发送事件失败: {}", e))?;
+    
+    Ok(())
+}
+```
+
+### 错误处理
+
+#### 统一错误类型
+
+```rust
+// 自定义错误类型
+#[derive(Debug, Serialize)]
+pub struct ApiError {
+    pub code: String,
+    pub message: String,
+    pub details: Option<serde_json::Value>,
+}
+
+impl std::fmt::Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}: {}", self.code, self.message)
+    }
+}
+
+// 命令中使用
+#[tauri::command]
+pub async fn safe_operation() -> Result<String, ApiError> {
+    match risky_operation().await {
+        Ok(result) => Ok(result),
+        Err(e) => Err(ApiError {
+            code: "OPERATION_FAILED".to_string(),
+            message: format!("操作失败: {}", e),
+            details: None,
+        })
+    }
+}
+```
+
+#### 前端错误处理
+
+```typescript
+// 错误处理 Hook
+export function useApiCall<T>(command: string, params?: any) {
+  const [data, setData] = useState<T | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const execute = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const result = await invoke<T>(command, params)
+      setData(result)
+    } catch (err) {
+      setError(err as string)
+    } finally {
+      setLoading(false)
+    }
+  }, [command, params])
+
+  return { data, error, loading, execute }
+}
+```
+
 ## 测试策略
 
 ### 前端测试
@@ -1127,10 +1366,142 @@ impl<T: Clone> Cache<T> {
 - **测试覆盖**：编写全面的单元测试和集成测试
 - **文档更新**：保持文档与代码同步更新
 
+## 🔧 故障排除
+
+### 快速诊断
+
+在遇到问题时，首先运行环境检查工具：
+
+```bash
+# 检查开发环境
+npm run check:env
+
+# 自动修复可修复的问题
+npm run check:env:fix
+```
+
+### 常见问题解决
+
+#### Android 开发问题
+
+**OpenSSL 编译错误**
+```bash
+# 推荐方案：使用 rustls 替代 OpenSSL
+pnpm clean:all
+pnpm dev:android:safe
+
+# 备选方案：配置 OpenSSL 环境变量 (macOS)
+brew install openssl
+export OPENSSL_DIR=/opt/homebrew/opt/openssl
+```
+
+**模拟器检测失败**
+```bash
+# 检查模拟器状态
+npm run emulator:status
+
+# 启动模拟器
+npm run emulator:start
+
+# 安全启动命令
+npm run dev:android:safe
+```
+
+**Rust 编译失败**
+```bash
+# 安装 Android 目标
+rustup target add aarch64-linux-android
+rustup target add armv7-linux-androideabi
+
+# 检查 NDK 配置
+echo $ANDROID_HOME
+ls $ANDROID_HOME/ndk
+```
+
+#### iOS 开发问题
+
+**Xcode 工具缺失**
+```bash
+# 安装 Command Line Tools
+xcode-select --install
+
+# 验证安装
+xcodebuild -version
+```
+
+**模拟器问题**
+```bash
+# 列出可用模拟器
+xcrun simctl list devices
+
+# 启动特定模拟器
+xcrun simctl boot "iPhone 14"
+open -a Simulator
+```
+
+#### 前端开发问题
+
+**Node.js 版本问题**
+```bash
+# 使用 nvm 管理版本
+nvm install --lts
+nvm use --lts
+
+# 清理依赖缓存
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**Vite 服务器问题**
+```bash
+# 检查端口占用
+lsof -i :1420
+
+# 使用不同端口
+npm run dev -- --port 3000
+```
+
+### 调试技巧
+
+```bash
+# 启用详细日志
+export RUST_LOG=debug
+export TAURI_DEBUG=true
+
+# 清理和重置
+npm run clean
+rm -rf node_modules
+npm install
+
+# 查看详细错误信息
+tauri android dev --verbose
+tauri ios dev --verbose
+```
+
+### 常用命令速查
+
+```bash
+# 环境检查
+npm run check:env
+npm run check:env:fix
+
+# 模拟器管理
+npm run emulator:status
+npm run emulator:start
+
+# 安全开发
+npm run dev:android:safe
+
+# 清理和构建
+npm run clean
+npm run build:desktop
+npm run build:mobile
+```
+
 ---
 
 更多详细信息请参考：
 
 - [环境配置指南](ENVIRONMENT_SETUP.md)
 - [构建部署指南](BUILD_DEPLOYMENT.md)
-- [故障排除指南](TROUBLESHOOTING.md)

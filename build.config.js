@@ -1,42 +1,12 @@
-// Tauri 多平台构建配置
+// Tauri 构建配置 - 本地开发环境
 const buildConfig = {
   // 构建目标配置
   targets: {
-    // 桌面平台
-    'mac-x86': {
-      target: 'x86_64-apple-darwin',
+    // 当前系统桌面平台（由GitHub Actions处理跨平台构建）
+    'current-desktop': {
+      target: 'default',
       runner: 'cargo',
-      sourceDir: 'src-tauri/target/x86_64-apple-darwin/release/bundle',
-      platform: 'desktop',
-    },
-    'mac-aarch': {
-      target: 'aarch64-apple-darwin',
-      runner: 'cargo',
-      sourceDir: 'src-tauri/target/aarch64-apple-darwin/release/bundle',
-      platform: 'desktop',
-    },
-    'win-x86': {
-      target: 'x86_64-pc-windows-msvc',
-      runner: 'cargo-xwin',
-      sourceDir: 'src-tauri/target/x86_64-pc-windows-msvc/release/bundle',
-      platform: 'desktop',
-    },
-    // 'win-aarch': {
-    //   target: 'aarch64-pc-windows-msvc',
-    //   runner: 'cargo-xwin',
-    //   sourceDir: 'src-tauri/target/aarch64-pc-windows-msvc/release/bundle',
-    //   platform: 'desktop',
-    // },
-    'linux-x86': {
-      target: 'x86_64-unknown-linux-gnu',
-      runner: 'cargo',
-      sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
-      platform: 'desktop',
-    },
-    'linux-aarch': {
-      target: 'aarch64-unknown-linux-gnu',
-      runner: 'cargo',
-      sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
+      sourceDir: 'src-tauri/target/release/bundle',
       platform: 'desktop',
     },
 

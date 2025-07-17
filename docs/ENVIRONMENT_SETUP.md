@@ -7,7 +7,7 @@
 - [基础环境要求](#基础环境要求)
 - [桌面平台配置](#桌面平台配置)
 - [移动平台配置](#移动平台配置)
-- [跨平台构建配置](#跨平台构建配置)
+
 - [开发工具配置](#开发工具配置)
 - [环境验证](#环境验证)
 - [常见问题](#常见问题)
@@ -107,7 +107,7 @@
    # 安装 Homebrew
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-   # 安装 NSIS（用于 Windows 跨平台构建）
+   # 安装 NSIS（用于 Windows 构建）
    brew install makensis
    ```
 
@@ -304,40 +304,7 @@ sudo pacman -S \
    adb devices
    ```
 
-## 跨平台构建配置
 
-### 在 macOS/Linux 上构建 Windows 应用
-
-1. **安装 cargo-xwin**：
-
-   ```bash
-   cargo install --locked cargo-xwin
-   ```
-
-2. **安装 NSIS**（用于创建安装包）：
-
-   **macOS**：
-
-   ```bash
-   brew install makensis
-   ```
-
-   **Linux**：
-
-   ```bash
-   sudo apt install nsis  # Ubuntu/Debian
-   sudo dnf install nsis  # Fedora
-   ```
-
-3. **添加 Windows 目标**：
-   ```bash
-   rustup target add x86_64-pc-windows-msvc
-   rustup target add aarch64-pc-windows-msvc
-   ```
-
-### 在 Windows 上构建其他平台
-
-**注意**：Windows 用户无法直接构建 macOS 应用，需要 macOS 系统和 Xcode。
 
 ## 开发工具配置
 
