@@ -79,33 +79,33 @@ jobs:
           releaseName: 'App v__VERSION__'
           releaseBody: |
             ## 🚀 Release __VERSION__
-            
+
             ### 📦 下载链接
-            
+
             #### 桌面版本
             - **macOS**: 支持 Intel (x86_64) 和 Apple Silicon (ARM64)
             - **Windows**: 支持 x86_64 (兼容 ARM64 芯片)
             - **Linux**: 支持 x86_64 (AppImage, DEB, RPM)
-            
+
             ### 🔧 安装说明
-            
+
             #### macOS
             1. 下载对应架构的 `.dmg` 文件
             2. 双击打开并拖拽到应用程序文件夹
             3. 首次运行可能需要在系统偏好设置中允许
-            
+
             #### Windows
             1. 下载 `.exe` 安装程序
             2. 运行安装程序并按提示操作
             3. Windows Defender 可能会显示警告，选择"仍要运行"
-            
+
             #### Linux
             - **AppImage**: 下载后添加执行权限 `chmod +x *.AppImage`
             - **DEB**: 使用 `sudo dpkg -i *.deb` 安装
             - **RPM**: 使用 `sudo rpm -i *.rpm` 安装
-            
+
             ---
-            
+
             **完整更新日志**: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
           releaseDraft: ${{ github.event.inputs.release_type == 'draft' || github.event_name != 'workflow_dispatch' }}
           prerelease: ${{ github.event.inputs.release_type == 'prerelease' }}
