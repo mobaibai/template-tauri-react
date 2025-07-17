@@ -322,45 +322,120 @@ jobs:
           $bundleDir = "$targetDir/bundle"
 
           Write-Host "Searching for build artifacts..."
+          Write-Host "Target directory: $targetDir"
+          Write-Host "Bundle directory: $bundleDir"
 
           # 查找 .exe 安装程序（通常在 bundle/nsis 目录）
           $nsisDir = "$bundleDir/nsis"
+          Write-Host "Checking NSIS directory: $nsisDir"
           if (Test-Path $nsisDir) {
+            Write-Host "NSIS directory exists, looking for .exe files..."
             Get-ChildItem -Path $nsisDir -Filter "*.exe" | ForEach-Object {
               $destPath = "dist-builds/$($_.Name)"
               Copy-Item -Path $_.FullName -Destination $destPath -Force
               Write-Host "Copied installer: $($_.Name) -> $destPath"
             }
+          } else {
+            Write-Host "NSIS directory does not exist"
           }
 
           # 查找 .msi 安装程序（通常在 bundle/msi 目录）
           $msiDir = "$bundleDir/msi"
+          Write-Host "Checking MSI directory: $msiDir"
           if (Test-Path $msiDir) {
+            Write-Host "MSI directory exists, looking for .msi files..."
             Get-ChildItem -Path $msiDir -Filter "*.msi" | ForEach-Object {
               $destPath = "dist-builds/$($_.Name)"
               Copy-Item -Path $_.FullName -Destination $destPath -Force
               Write-Host "Copied installer: $($_.Name) -> $destPath"
             }
+          } else {
+            Write-Host "MSI directory does not exist"
           }
 
           # 如果没有找到安装程序，尝试复制可执行文件
           if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
             Write-Host "No installers found, looking for executable files..."
-            Get-ChildItem -Path $targetDir -Filter "*.exe" | Where-Object { $_.Name -notlike "*-*" } | ForEach-Object {
-              $destPath = "dist-builds/$($_.Name)"
-              Copy-Item -Path $_.FullName -Destination $destPath -Force
-              Write-Host "Copied executable: $($_.Name) -> $destPath"
+            
+            # 检查目标目录是否存在
+            if (Test-Path $targetDir) {
+              Get-ChildItem -Path $targetDir -Filter "*.exe" | Where-Object { $_.Name -notlike "*-*" } | ForEach-Object {
+                $destPath = "dist-builds/$($_.Name)"
+                Copy-Item -Path $_.FullName -Destination $destPath -Force
+                Write-Host "Copied executable: $($_.Name) -> $destPath"
+              }
+            } else {
+              Write-Host "Target directory $targetDir does not exist"
+              
+              # 尝试在整个 src-tauri/target 目录中查找可执行文件
+              Write-Host "Searching for executables in entire target directory..."
+              if (Test-Path "src-tauri/target") {
+                Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.exe" | Where-Object { 
+                  $_.Name -notlike "*-*" -and $_.Directory.Name -eq "release" 
+                } | ForEach-Object {
+                  $destPath = "dist-builds/$($_.Name)"
+                  Copy-Item -Path $_.FullName -Destination $destPath -Force
+                  Write-Host "Copied executable: $($_.Name) -> $destPath"
+                }
+              }
+            }
+          }
+
+          # 如果仍然没有找到任何文件，尝试更广泛的搜索
+          if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
+            Write-Host "No artifacts found yet, performing comprehensive search..."
+            
+            # 搜索所有可能的构建产物
+            $searchPaths = @(
+              "src-tauri/target",
+              "src-tauri/target/${{ matrix.target }}",
+              "src-tauri/target/${{ matrix.target }}/release",
+              "src-tauri/target/release"
+            )
+            
+            foreach ($searchPath in $searchPaths) {
+              if (Test-Path $searchPath) {
+                Write-Host "Searching in: $searchPath"
+                
+                # 查找所有可能的Windows构建产物
+                $patterns = @("*.exe", "*.msi", "*.zip")
+                foreach ($pattern in $patterns) {
+                  Get-ChildItem -Path $searchPath -Recurse -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
+                    # 排除明显的临时文件和工具文件
+                    if ($_.Name -notmatch "(deps|build|incremental|fingerprint|tmp|temp)" -and $_.Length -gt 1MB) {
+                      $destPath = "dist-builds/$($_.Name)"
+                      Copy-Item -Path $_.FullName -Destination $destPath -Force
+                      Write-Host "Found and copied: $($_.Name) from $($_.Directory.FullName)"
+                    }
+                  }
+                }
+              }
             }
           }
 
           # 显示最终结果
           Write-Host "`nFinal contents of dist-builds:"
           if (Test-Path "dist-builds") {
-            Get-ChildItem -Path "dist-builds" -Recurse | ForEach-Object {
-              Write-Host "  $($_.Name) ($($_.Length) bytes)"
+            $artifacts = Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue
+            if ($artifacts) {
+              $artifacts | ForEach-Object {
+                Write-Host "  $($_.Name) ($($_.Length) bytes)"
+              }
+            } else {
+              Write-Host "  (directory exists but empty)"
             }
           } else {
-            Write-Host "  (empty)"
+            Write-Host "  (directory does not exist)"
+          }
+          
+          # 如果最终还是没有找到任何构建产物，输出详细的目录结构用于调试
+          if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
+            Write-Host "`n=== DEBUG: Complete target directory structure ==="
+            if (Test-Path "src-tauri/target") {
+              Get-ChildItem -Path "src-tauri/target" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Length -gt 1MB } | ForEach-Object {
+                Write-Host "Large file: $($_.FullName) ($($_.Length) bytes)"
+              }
+            }
           }
 
       - name: Upload Windows artifacts
