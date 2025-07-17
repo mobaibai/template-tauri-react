@@ -27,18 +27,18 @@ const buildConfig = {
     //   sourceDir: 'src-tauri/target/aarch64-pc-windows-msvc/release/bundle',
     //   platform: 'desktop',
     // },
-    // 'linux-x86': {
-    //   target: 'x86_64-unknown-linux-gnu',
-    //   runner: 'cargo',
-    //   sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
-    //   platform: 'desktop',
-    // },
-    // 'linux-aarch': {
-    //   target: 'aarch64-unknown-linux-gnu',
-    //   runner: 'cargo',
-    //   sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
-    //   platform: 'desktop',
-    // },
+    'linux-x86': {
+      target: 'x86_64-unknown-linux-gnu',
+      runner: 'cargo',
+      sourceDir: 'src-tauri/target/x86_64-unknown-linux-gnu/release/bundle',
+      platform: 'desktop',
+    },
+    'linux-aarch': {
+      target: 'aarch64-unknown-linux-gnu',
+      runner: 'cargo',
+      sourceDir: 'src-tauri/target/aarch64-unknown-linux-gnu/release/bundle',
+      platform: 'desktop',
+    },
 
     // 移动平台
     ios: {

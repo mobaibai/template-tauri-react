@@ -458,10 +458,91 @@ jobs:
         continue-on-error: false
         run: pnpm run build:linux-x86
 
-      - name: Create dist-builds directory if not exists
+      - name: Debug - List build artifacts
         run: |
+          echo "=== Checking build output directories ==="
+          
+          # 检查主要的构建目录
+          TARGET_DIR="src-tauri/target/${{ matrix.target }}"
+          if [ -d "$TARGET_DIR" ]; then
+            echo "Contents of $TARGET_DIR:"
+            find "$TARGET_DIR" -type f | sort
+          else
+            echo "Directory $TARGET_DIR does not exist"
+          fi
+          
+          # 检查 bundle 目录
+          BUNDLE_DIR="$TARGET_DIR/release/bundle"
+          if [ -d "$BUNDLE_DIR" ]; then
+            echo ""
+            echo "Contents of $BUNDLE_DIR:"
+            find "$BUNDLE_DIR" -type f | sort
+          else
+            echo "Directory $BUNDLE_DIR does not exist"
+          fi
+          
+          # 检查是否有 Linux 包文件
+          echo ""
+          echo "=== Looking for Linux package files ==="
+          find "src-tauri/target" -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" 2>/dev/null | while read file; do
+            echo "Found: $file"
+          done
+        continue-on-error: true
+
+      - name: Create dist-builds directory and copy artifacts
+        run: |
+          # 创建输出目录
           mkdir -p dist-builds
-          ls -la dist-builds/
+          
+          echo "Searching for Linux build artifacts..."
+          
+          # 查找并复制构建产物
+          TARGET_DIR="src-tauri/target/${{ matrix.target }}/release/bundle"
+          
+          # 查找 .deb 文件
+          if [ -d "$TARGET_DIR/deb" ]; then
+            find "$TARGET_DIR/deb" -name "*.deb" -exec cp {} dist-builds/ \;
+            find "$TARGET_DIR/deb" -name "*.deb" -exec basename {} \; | while read file; do
+              echo "Copied DEB package: $file"
+            done
+          fi
+          
+          # 查找 .rpm 文件
+          if [ -d "$TARGET_DIR/rpm" ]; then
+            find "$TARGET_DIR/rpm" -name "*.rpm" -exec cp {} dist-builds/ \;
+            find "$TARGET_DIR/rpm" -name "*.rpm" -exec basename {} \; | while read file; do
+              echo "Copied RPM package: $file"
+            done
+          fi
+          
+          # 查找 .AppImage 文件
+          if [ -d "$TARGET_DIR/appimage" ]; then
+            find "$TARGET_DIR/appimage" -name "*.AppImage" -exec cp {} dist-builds/ \;
+            find "$TARGET_DIR/appimage" -name "*.AppImage" -exec basename {} \; | while read file; do
+              echo "Copied AppImage: $file"
+            done
+          fi
+          
+          # 如果没有找到任何包文件，尝试查找可执行文件
+          if [ -z "$(ls -A dist-builds 2>/dev/null)" ]; then
+            echo "No package files found, looking for executable files..."
+            RELEASE_DIR="src-tauri/target/${{ matrix.target }}/release"
+            if [ -d "$RELEASE_DIR" ]; then
+              find "$RELEASE_DIR" -maxdepth 1 -type f -executable -not -name "*.*" -exec cp {} dist-builds/ \;
+              find "$RELEASE_DIR" -maxdepth 1 -type f -executable -not -name "*.*" -exec basename {} \; | while read file; do
+                echo "Copied executable: $file"
+              done
+            fi
+          fi
+          
+          # 显示最终结果
+          echo ""
+          echo "Final contents of dist-builds:"
+          if [ -d "dist-builds" ] && [ "$(ls -A dist-builds)" ]; then
+            ls -la dist-builds/
+          else
+            echo "  (empty)"
+          fi
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
