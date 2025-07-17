@@ -1,0 +1,109 @@
+name: 'Build and Release'
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'draft'
+        type: choice
+        options:
+          - draft
+          - prerelease
+          - release
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04' # for Tauri v2
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 'latest'
+          run_install: false
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+        # webkitgtk 4.1 is for Tauri v2
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__ # the action automatically replaces __VERSION__ with the app version.
+          releaseName: 'App v__VERSION__'
+          releaseBody: |
+            ## 🚀 Release __VERSION__
+            
+            ### 📦 下载链接
+            
+            #### 桌面版本
+            - **macOS**: 支持 Intel (x86_64) 和 Apple Silicon (ARM64)
+            - **Windows**: 支持 x86_64 (兼容 ARM64 芯片)
+            - **Linux**: 支持 x86_64 (AppImage, DEB, RPM)
+            
+            ### 🔧 安装说明
+            
+            #### macOS
+            1. 下载对应架构的 `.dmg` 文件
+            2. 双击打开并拖拽到应用程序文件夹
+            3. 首次运行可能需要在系统偏好设置中允许
+            
+            #### Windows
+            1. 下载 `.exe` 安装程序
+            2. 运行安装程序并按提示操作
+            3. Windows Defender 可能会显示警告，选择"仍要运行"
+            
+            #### Linux
+            - **AppImage**: 下载后添加执行权限 `chmod +x *.AppImage`
+            - **DEB**: 使用 `sudo dpkg -i *.deb` 安装
+            - **RPM**: 使用 `sudo rpm -i *.rpm` 安装
+            
+            ---
+            
+            **完整更新日志**: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          releaseDraft: ${{ github.event.inputs.release_type == 'draft' || github.event_name != 'workflow_dispatch' }}
+          prerelease: ${{ github.event.inputs.release_type == 'prerelease' }}
+          args: ${{ matrix.args }}
