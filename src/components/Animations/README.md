@@ -20,7 +20,7 @@
 ```bash
 npm install @react-spring/web
 # 或
-yarn add @react-spring/web
+pnpm add @react-spring/web
 ```
 
 ## 🎯 快速开始

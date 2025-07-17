@@ -9,7 +9,7 @@ best practices.
 - [Build Overview](#build-overview)
 - [Development Build](#development-build)
 - [Production Build](#production-build)
-- [Cross-Platform Build](#cross-platform-build)
+- [Local Build](#local-build)
 - [Mobile Platform Build](#mobile-platform-build)
 - [Build Optimization](#build-optimization)
 - [Deployment Strategies](#deployment-strategies)
@@ -17,6 +17,19 @@ best practices.
 - [Troubleshooting](#troubleshooting)
 
 ## Build Overview
+
+This project supports multiple build approaches:
+
+- 🖥️ **Desktop Applications**: Windows, macOS, Linux (GitHub Actions automated
+  builds)
+- 📱 **Mobile Applications**: iOS, Android (local configuration and builds
+  required)
+- 🔄 **Automated Builds**: GitHub Actions CI/CD (desktop platforms only)
+- 🛠️ **Local Builds**: Development and testing environments
+
+> **⚠️ Important Note**: GitHub Actions workflow currently only supports
+> automated building and releasing for desktop platforms. Mobile platforms
+> (iOS/Android) require local environment configuration and building.
 
 ### Build Architecture
 
@@ -246,119 +259,22 @@ debug = true
 incremental = true
 ```
 
-## Cross-Platform Build
+## Local Build
 
-### Supported Platforms
+> **Important**: Cross-platform builds are handled by GitHub Actions. Local development only needs to build for current system.
 
-| Platform    | Architecture  | Build Command                     | Output Format                   | Notes                           |
-| ----------- | ------------- | --------------------------------- | ------------------------------- | ------------------------------- |
-| Windows     | x64           | `npm run build:windows-x64`       | `.msi`, `.exe`                  | Compatible with ARM64 chips     |
-| ~~Windows~~ | ~~ARM64~~     | ~~`npm run build:windows-arm64`~~ | ~~`.msi`, `.exe`~~              | **Removed**: x64 works on ARM64 |
-| macOS       | Intel         | `npm run build:macos-x64`         | `.dmg`, `.app`                  | Intel chips only                |
-| macOS       | Apple Silicon | `npm run build:macos-arm64`       | `.dmg`, `.app`                  | Apple Silicon chips only        |
-| Linux       | x64           | `npm run build:linux-x64`         | `.deb`, `.rpm`, `.AppImage`     | Compatible with ARM64 chips     |
-| ~~Linux~~   | ~~ARM64~~     | ~~`npm run build:linux-arm64`~~   | ~~`.deb`, `.rpm`, `.AppImage`~~ | **Removed**: x64 works on ARM64 |
+### Local Development Build
 
-> **Important Changes**:
->
-> - **Windows ARM64**: Removed dedicated ARM64 builds, x64 version runs well on
->   ARM64 chips
-> - **Linux ARM64**: Removed dedicated ARM64 builds, x64 version runs well on
->   ARM64 chips
-> - **macOS**: Keeping both native builds due to significant performance
->   differences
->
-> Benefits:
->
-> - Reduced build time and maintenance cost
-> - Simplified distribution process
-> - x64 compatibility on ARM64 is sufficient
-
-### Cross-Platform Build Script
+For local development, you only need to build for your current system:
 
 ```bash
-#!/bin/bash
-# scripts/build-all-platforms.sh
-
-set -e
-
-echo "🚀 Starting cross-platform build..."
-
-# Check environment
-echo "📋 Checking build environment..."
-npm run check:env
-
-# Clean previous builds
-echo "🧹 Cleaning build cache..."
-npm run clean
-
-# Build frontend
-echo "⚛️ Building React frontend..."
-npm run build:frontend
-
-# Current platform build
-echo "🖥️ Building current platform..."
+# Build for current system
 npm run build:tauri
-
-# Cross-platform builds (if supported)
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  echo "🍎 macOS detected, building all macOS targets..."
-  npm run build:macos-x64
-  npm run build:macos-arm64
-
-  # If cross-compilation tools are installed
-  if command -v cargo-xwin &> /dev/null; then
-    echo "🪟 Cross-compiling Windows targets..."
-    npm run build:windows-x64
-    npm run build:windows-arm64
-  fi
-fi
-
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  echo "🐧 Linux detected, building Linux targets..."
-  npm run build:linux-x64
-fi
-
-echo "✅ Cross-platform build complete!"
-echo "📦 Build artifacts location: src-tauri/target/release/bundle/"
 ```
 
-### Cross-Compilation Setup
+### GitHub Actions Automated Build
 
-#### Windows Cross-Compilation (on macOS/Linux)
-
-```bash
-# Install cargo-xwin
-cargo install --locked cargo-xwin
-
-# Install Windows targets
-rustup target add x86_64-pc-windows-msvc
-rustup target add aarch64-pc-windows-msvc
-
-# Configure .cargo/config.toml
-[target.x86_64-pc-windows-msvc]
-linker = "cargo-xwin"
-
-[target.aarch64-pc-windows-msvc]
-linker = "cargo-xwin"
-```
-
-#### Build Script Configuration
-
-```json
-// package.json - Cross-platform build scripts
-{
-  "scripts": {
-    "build:windows-x64": "tauri build --target x86_64-pc-windows-msvc",
-    "build:windows-arm64": "tauri build --target aarch64-pc-windows-msvc",
-    "build:macos-x64": "tauri build --target x86_64-apple-darwin",
-    "build:macos-arm64": "tauri build --target aarch64-apple-darwin",
-    "build:linux-x64": "tauri build --target x86_64-unknown-linux-gnu",
-    "build:all": "npm run build:frontend && npm run build:all-targets",
-    "build:all-targets": "tauri build --target universal-apple-darwin"
-  }
-}
-```
+The project uses GitHub Actions for automated cross-platform builds. When you push a tag or manually trigger the workflow, it will automatically build for all supported platforms (Windows, macOS, Linux).
 
 ## Mobile Platform Build
 
@@ -398,7 +314,7 @@ npm run ios:dev
         "developmentTeam": "YOUR_TEAM_ID",
         "bundleIdentifier": "com.example.tauri-react-template",
         "bundleVersion": "1",
-        "bundleShortVersionString": "1.0.0",
+        "bundleShortVersionString": "0.0.1",
         "minimumSystemVersion": "13.0"
       }
     }
@@ -441,7 +357,7 @@ npm run android:dev
       "android": {
         "packageName": "com.example.tauri_react_template",
         "versionCode": 1,
-        "versionName": "1.0.0",
+        "versionName": "0.0.1",
         "minSdkVersion": 24,
         "compileSdkVersion": 34,
         "targetSdkVersion": 34
@@ -795,17 +711,15 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-#### 3. Cross-Compilation Failures
+#### 3. Local build failures
 
 ```bash
-# Check installed targets
-rustup target list --installed
+# Check Rust toolchain
+rustup update
+rustup default stable
 
-# Install missing targets
-rustup target add x86_64-pc-windows-msvc
-
-# Check cross-compilation tools
-which cargo-xwin
+# Check Tauri CLI
+cargo install tauri-cli
 ```
 
 ### Build Log Analysis

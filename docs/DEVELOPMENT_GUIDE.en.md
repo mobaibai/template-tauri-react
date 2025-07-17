@@ -116,7 +116,9 @@ npm run build
 # Production build
 npm run build:tauri
 
-# Cross-platform build
+# Local build
+
+> **Note**: PC cross-platform builds are handled by GitHub Actions. Local development only needs to build for current system.
 npm run build:all
 ```
 

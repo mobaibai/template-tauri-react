@@ -3,11 +3,10 @@
  * 开发环境检查和修复脚本
  * 自动检测 Tauri 开发所需的环境配置
  */
-import { execSync, spawn } from 'child_process'
+import { execSync } from 'child_process'
 import fs from 'fs'
 import os from 'os'
-import path from 'path'
-import { dirname } from 'path'
+import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -76,10 +75,12 @@ function checkNodeEnvironment() {
   const nodeVersion = process.version
   const npmVersion = getVersion('npm')
   const yarnVersion = getVersion('yarn')
+  const pnpmVersion = getVersion('pnpm')
 
   logInfo(`Node.js: ${nodeVersion}`)
   if (npmVersion) logInfo(`npm: ${npmVersion}`)
   if (yarnVersion) logInfo(`Yarn: ${yarnVersion}`)
+  if (pnpmVersion) logInfo(`pnpm: ${pnpmVersion}`)
 
   // 检查 Node.js 版本
   const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0])
@@ -493,12 +494,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export {
-  checkNodeEnvironment,
-  checkRustEnvironment,
-  checkOpenSSLEnvironment,
-  checkTauriCLI,
-  checkAndroidEnvironment,
   checkAndroidEmulator,
+  checkAndroidEnvironment,
+  checkNodeEnvironment,
+  checkOpenSSLEnvironment,
   checkRustAndroidTargets,
+  checkRustEnvironment,
+  checkTauriCLI,
   checkiOSEnvironment,
 }

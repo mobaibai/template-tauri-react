@@ -61,7 +61,7 @@
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
         "installMode": "perMachine",
-        "languages": ["zh-CN"],
+        "languages": ["English"],
         "template": null
       }
     }

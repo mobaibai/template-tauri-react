@@ -1,4 +1,4 @@
-## Cargo 配置 - 使用官方源以确保 GitHub Actions 构建稳定性
+# Cargo 配置 - 使用官方源以确保 GitHub Actions 构建稳定性
 # 注释掉国内镜像源配置，避免在 CI 环境中出现网络超时问题
 # [source.crates-io]
 # replace-with = 'rsproxy-sparse'
@@ -10,27 +10,3 @@
 # index = "https://rsproxy.cn/crates.io-index"
 [net]
 git-fetch-with-cli = true
-
-# Windows 跨平台编译配置
-[target.x86_64-pc-windows-msvc]
-linker = "lld-link"
-
-[target.aarch64-pc-windows-msvc]
-linker = "rust-lld"
-
-# Linux 跨平台编译配置
-[target.aarch64-unknown-linux-gnu]
-linker = "aarch64-linux-gnu-gcc"
-
-# 环境变量配置
-[env]
-CC_x86_64_pc_windows_msvc = "clang-cl"
-CXX_x86_64_pc_windows_msvc = "clang-cl"
-AR_x86_64_pc_windows_msvc = "llvm-lib"
-# cargo-xwin 配置
-CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER = "rust-lld"
-# Linux aarch64 交叉编译配置
-CC_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-gcc"
-CXX_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-g++"
-AR_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-ar"
-STRIP_aarch64_unknown_linux_gnu = "aarch64-linux-gnu-strip"

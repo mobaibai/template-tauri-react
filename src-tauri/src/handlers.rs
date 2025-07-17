@@ -370,7 +370,7 @@ async fn make_http_request(
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_millis(timeout))
-        .user_agent("Tauri-App/1.0.0")
+        .user_agent("Tauri-App/0.0.1")
         .build()
         .map_err(|e| format!("创建 HTTP 客户端失败: {e}"))?;
 

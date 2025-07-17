@@ -15,6 +15,18 @@ React 项目的构建、打包和部署流程，包括各平台的特定配置�
 - [自动化部署](#自动化部署)
 - [故障排除](#故障排除)
 
+## 📋 构建概览
+
+本项目支持多种构建方式：
+
+- 🖥️ **桌面应用**：Windows、macOS、Linux（支持 GitHub Actions 自动构建）
+- 📱 **移动应用**：iOS、Android（需要本地配置和构建）
+- 🔄 **自动化构建**：GitHub Actions CI/CD（仅桌面平台）
+- 🛠️ **本地构建**：开发和测试环境
+
+> **⚠️ 重要说明**：GitHub
+> Actions 工作流目前仅支持桌面平台的自动构建和发布。移动平台（iOS/Android）需要在本地环境进行配置和构建。
+
 ## 构建概述
 
 ### 构建架构
@@ -245,118 +257,133 @@ debug = true
 incremental = true
 ```
 
-## 跨平台构建
+## 本地开发构建
 
-### 支持的平台
+### 当前系统构建
 
-| 平台        | 架构          | 构建命令                          | 输出格式                        | 说明                         |
-| ----------- | ------------- | --------------------------------- | ------------------------------- | ---------------------------- |
-| Windows     | x64           | `npm run build:windows-x64`       | `.msi`, `.exe`                  | 兼容 ARM64 芯片              |
-| ~~Windows~~ | ~~ARM64~~     | ~~`npm run build:windows-arm64`~~ | ~~`.msi`, `.exe`~~              | **已移除**: x64版本兼容ARM64 |
-| macOS       | Intel         | `npm run build:macos-x64`         | `.dmg`, `.app`                  | Intel 芯片专用               |
-| macOS       | Apple Silicon | `npm run build:macos-arm64`       | `.dmg`, `.app`                  | Apple Silicon 芯片专用       |
-| Linux       | x64           | `npm run build:linux-x64`         | `.deb`, `.rpm`, `.AppImage`     | 兼容 ARM64 芯片              |
-| ~~Linux~~   | ~~ARM64~~     | ~~`npm run build:linux-arm64`~~   | ~~`.deb`, `.rpm`, `.AppImage`~~ | **已移除**: x64版本兼容ARM64 |
-
-> **重要变更说明**:
->
-> - **Windows ARM64**: 已移除专用 ARM64 构建，x64 版本可在 ARM64 芯片上正常运行
-> - **Linux ARM64**: 已移除专用 ARM64 构建，x64 版本可在 ARM64 芯片上正常运行
-> - **macOS**: 保留两个架构的原生构建，因为性能差异显著
->
-> 这样做的好处：
->
-> - 减少构建时间和维护成本
-> - 简化分发流程
-> - x64 版本在 ARM64 上的兼容性已经足够好
-
-### 跨平台构建脚本
+由于项目已配置 GitHub Actions 进行自动化构建和发布，本地开发环境只需要支持当前系统的构建即可：
 
 ```bash
-#!/bin/bash
-# scripts/build-all-platforms.sh
+# 构建当前系统的桌面应用
+npm run build:tauri
+```
 
-set -e
+> **📝 说明**：
+> - GitHub Actions 会自动处理 Windows、macOS、Linux 的跨平台构建
+> - 本地开发只需要关注当前系统的构建和调试
+> - 这样可以显著减少本地构建时间和复杂度
 
-echo "🚀 开始跨平台构建..."
+## 移动平台构建
+
+### Android 构建
+
+#### 🔧 环境配置
+
+**前置要求**:
+- Android SDK
+- Android NDK
+- Java Development Kit (JDK) 8+
+
+**环境变量设置**:
+```bash
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/26.1.10909125"
+export PATH="$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+```
+
+**验证环境**:
+```bash
+npm run check:env
+```
+
+#### 🏗️ 构建流程
+
+**自动化构建（推荐）**:
+```bash
+npm run build:android
+```
+
+此命令会自动完成：
+- 构建 Android APK
+- 自动进行调试签名
+- 按版本号和架构重命名文件
+- 复制到 `dist-builds` 目录
+- 清理构建缓存
+
+**手动签名（可选）**:
+```bash
+npm run sign:android
+```
+
+#### 📦 构建产物
+
+**文件位置**:
+- **最终APK**: `dist-builds/template-tauri-react_版本号_架构.apk`
+- **最终AAB**: `dist-builds/template-tauri-react_版本号_架构.aab`
+- **调试密钥库**: `debug.keystore`（项目根目录）
+
+**命名格式**:
+- APK: `template-tauri-react_0.0.1_universal.apk`
+- AAB: `template-tauri-react_0.0.1_universal.aab`
+
+#### 📱 安装到设备
+
+**启用开发者选项**:
+1. 进入 **设置** > **关于手机**
+2. 连续点击 **版本号** 7 次
+3. 返回设置，进入 **开发者选项**
+4. 启用 **USB 调试**
+
+**安装方法**:
+```bash
+# 通过 ADB 安装
+adb install dist-builds/template-tauri-react_0.0.1_universal.apk
+
+# 或手动传输到设备安装
+```
+
+#### 🔍 故障排除
+
+**"无效安装包" 错误**:
+- 确保使用已签名的 APK 文件
+- 运行 `npm run sign:android` 重新签名
+
+**NDK 工具链错误**:
+- 检查 `ANDROID_NDK_ROOT` 环境变量
+- 验证 NDK 版本兼容性
+- 查看 `.cargo/config.toml` 配置
+
+**构建失败**:
+```bash
+# 清理缓存
+npm run clean:all
+
+# 重新安装依赖
+npm install
 
 # 检查环境
-echo "📋 检查构建环境..."
 npm run check:env
-
-# 清理之前的构建
-echo "🧹 清理构建缓存..."
-npm run clean
-
-# 构建前端
-echo "⚛️ 构建 React 前端..."
-npm run build:frontend
-
-# 当前平台构建
-echo "🖥️ 构建当前平台..."
-npm run build:tauri
-
-# 跨平台构建（如果支持）
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  echo "🍎 macOS 平台检测到，构建所有 macOS 目标..."
-  npm run build:macos-x64
-  npm run build:macos-arm64
-
-  # 如果安装了交叉编译工具
-  if command -v cargo-xwin &> /dev/null; then
-    echo "🪟 交叉编译 Windows 目标..."
-    npm run build:windows-x64
-    npm run build:windows-arm64
-  fi
-fi
-
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  echo "🐧 Linux 平台检测到，构建 Linux 目标..."
-  npm run build:linux-x64
-fi
-
-echo "✅ 跨平台构建完成！"
-echo "📦 构建产物位置: src-tauri/target/release/bundle/"
 ```
 
-### 交叉编译配置
-
-#### Windows 交叉编译（在 macOS/Linux 上）
-
-```bash
-# 安装 cargo-xwin
-cargo install --locked cargo-xwin
-
-# 安装 Windows 目标
-rustup target add x86_64-pc-windows-msvc
-rustup target add aarch64-pc-windows-msvc
-
-# 配置 .cargo/config.toml
-[target.x86_64-pc-windows-msvc]
-linker = "cargo-xwin"
-
-[target.aarch64-pc-windows-msvc]
-linker = "cargo-xwin"
-```
-
-#### 构建脚本配置
+#### Android 配置
 
 ```json
-// package.json - 跨平台构建脚本
+// tauri.conf.json - Android 配置
 {
-  "scripts": {
-    "build:windows-x64": "tauri build --target x86_64-pc-windows-msvc",
-    "build:windows-arm64": "tauri build --target aarch64-pc-windows-msvc",
-    "build:macos-x64": "tauri build --target x86_64-apple-darwin",
-    "build:macos-arm64": "tauri build --target aarch64-apple-darwin",
-    "build:linux-x64": "tauri build --target x86_64-unknown-linux-gnu",
-    "build:all": "npm run build:frontend && npm run build:all-targets",
-    "build:all-targets": "tauri build --target universal-apple-darwin"
+  "tauri": {
+    "bundle": {
+      "android": {
+        "packageName": "com.example.tauri_react_template",
+        "versionCode": 1,
+        "versionName": "0.0.1",
+        "minSdkVersion": 24,
+        "compileSdkVersion": 34,
+        "targetSdkVersion": 34
+      }
+    }
   }
 }
 ```
-
-## 移动平台构建
 
 ### iOS 构建
 
@@ -394,53 +421,8 @@ npm run ios:dev
         "developmentTeam": "YOUR_TEAM_ID",
         "bundleIdentifier": "com.example.tauri-react-template",
         "bundleVersion": "1",
-        "bundleShortVersionString": "1.0.0",
+        "bundleShortVersionString": "0.0.1",
         "minimumSystemVersion": "13.0"
-      }
-    }
-  }
-}
-```
-
-### Android 构建
-
-**前提条件**：
-
-- Android Studio 或 Android SDK
-- Android NDK
-- Java 11+
-
-```bash
-# 初始化 Android 项目
-npm run tauri android init
-
-# 开发构建
-npm run dev:android
-
-# 生产构建
-npm run build:android
-
-# 构建并运行在模拟器
-npm run android:emu
-
-# 构建并运行在设备
-npm run android:dev
-```
-
-#### Android 配置
-
-```json
-// tauri.conf.json - Android 配置
-{
-  "tauri": {
-    "bundle": {
-      "android": {
-        "packageName": "com.example.tauri_react_template",
-        "versionCode": 1,
-        "versionName": "1.0.0",
-        "minSdkVersion": 24,
-        "compileSdkVersion": 34,
-        "targetSdkVersion": 34
       }
     }
   }
@@ -621,7 +603,96 @@ zipalign -v 4 app-release-unsigned.apk app-release.apk
 
 ## 自动化部署
 
-### GitHub Actions
+### 🤖 自动化部署
+
+#### GitHub Actions
+
+项目已配置完整的 GitHub Actions CI/CD 工作流，支持自动构建、测试和发布。
+
+##### 🚀 功能特性
+
+- ✅ **前端测试**: ESLint 检查、TypeScript 类型检查
+- 🏗️ **多平台构建**: Windows、macOS、Linux 自动构建
+- 📦 **自动发布**: GitHub Releases 创建和构建产物上传
+- 🧹 **资源清理**: 自动清理临时文件，节省存储空间
+
+##### 📋 支持平台
+
+###### 桌面平台（GitHub Actions 自动构建）
+- **macOS**: Intel (x86_64) 和 Apple Silicon (ARM64)
+- **Windows**: x86_64 和 ARM64
+- **Linux**: x86_64 和 ARM64 (AppImage, DEB, RPM)
+
+###### 移动平台（需要本地配置）
+- **iOS**: 需要 macOS 环境和 Xcode
+- **Android**: 需要 Android SDK 和 NDK
+
+##### 🔧 触发方式
+
+1. **标签推送**: 推送以 `v` 开头的标签（如 `v1.0.0`）
+2. **手动触发**: 在 GitHub Actions 页面手动运行
+3. **Pull Request**: 自动运行测试（不发布）
+4. **推送到主分支**: 运行测试构建
+
+##### 🛠️ 使用方法
+
+###### 自动发布（推荐）
+
+```bash
+# 创建并推送标签
+git tag v1.0.0
+git push origin v1.0.0
+
+# 工作流将自动:
+# 1. 运行前端测试
+# 2. 构建所有平台
+# 3. 创建 GitHub Release
+# 4. 上传构建产物
+```
+
+###### 手动触发
+
+1. 访问 GitHub Actions 页面
+2. 选择 "Build and Release" 工作流
+3. 点击 "Run workflow"
+4. 配置构建选项（桌面/移动/全部）
+5. 选择发布类型（正式/预发布/草稿）
+
+##### 📦 构建产物
+
+构建完成后，可在 GitHub Releases 页面下载：
+
+- **macOS**: `.dmg` 安装包和 `.app` 应用包
+- **Windows**: `.exe` 安装程序和 `.msi` 安装包
+- **Linux**: `.AppImage`、`.deb` 和 `.rpm` 包
+
+###### 文件命名规则
+```
+{应用名}-{版本号}-{平台标识}.{扩展名}
+```
+
+示例：
+- `template-tauri-react-1.0.0-macOS-Intel.dmg`
+- `template-tauri-react-1.0.0-Windows-x64.exe`
+- `template-tauri-react-1.0.0-Linux-x64.AppImage`
+
+##### 🔒 安全配置
+
+###### 必需的 Secrets
+- `GITHUB_TOKEN`: 自动提供，用于创建 Release
+
+###### 可选的 Secrets（用于代码签名）
+- `APPLE_CERTIFICATE`: macOS 应用签名证书
+- `ANDROID_KEYSTORE`: Android 应用签名密钥
+
+```yaml
+# 支持的平台
+platforms:
+  desktop: [macos, windows, linux] # 自动构建
+  mobile: [ios, android] # 需要本地配置
+```
+
+> **注意**: 移动端（iOS/Android）构建需要本地环境配置，GitHub Actions 暂不支持。
 
 ```yaml
 # .github/workflows/build.yml
@@ -791,17 +862,15 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-#### 3. 跨平台编译失败
+#### 3. 本地构建失败
 
 ```bash
-# 检查目标是否已安装
-rustup target list --installed
+# 检查 Rust 工具链
+rustup update
+rustup default stable
 
-# 安装缺失的目标
-rustup target add x86_64-pc-windows-msvc
-
-# 检查交叉编译工具
-which cargo-xwin
+# 检查 Tauri CLI
+cargo install tauri-cli
 ```
 
 ### 构建日志分析

@@ -366,8 +366,8 @@ function buildPlatform(platformName, config) {
       // 移动端构建命令
       buildCommand = `tauri ${config.buildCommand}`
     } else {
-      // 桌面端构建命令
-      buildCommand = `tauri build --runner ${config.runner} --target ${config.target}`
+      // 桌面端构建命令（当前系统默认构建）
+      buildCommand = `tauri build`
     }
 
     logStep('TAURI', `执行: ${buildCommand}`)
@@ -514,7 +514,12 @@ function copyBuildArtifacts(platformName, config) {
         })
       }
     } else if (platformName.startsWith('win')) {
-      // Windows: 复制 .exe 文件
+      // Windows: 复制安装程序文件
+      logStep('COPY', `查找 ${platformName} 构建产物...`)
+
+      let artifactsCopied = false
+
+      // 优先查找 NSIS 安装程序 (.exe)
       const nsisDir = path.join(config.sourceDir, 'nsis')
       if (fs.existsSync(nsisDir)) {
         const exeFiles = fs.readdirSync(nsisDir).filter(file => file.endsWith('.exe'))
@@ -522,8 +527,54 @@ function copyBuildArtifacts(platformName, config) {
           const sourcePath = path.join(nsisDir, exeFile)
           const targetPath = path.join(buildConfig.options.outputRoot, exeFile)
           execSync(`cp "${sourcePath}" "${targetPath}"`)
-          logSuccess(`已复制 ${exeFile} 到 ${buildConfig.options.outputRoot}`)
+          logSuccess(`已复制 NSIS 安装程序: ${exeFile}`)
+          artifactsCopied = true
         })
+      }
+
+      // 查找 MSI 安装程序
+      const msiDir = path.join(config.sourceDir, 'msi')
+      if (fs.existsSync(msiDir)) {
+        const msiFiles = fs.readdirSync(msiDir).filter(file => file.endsWith('.msi'))
+        msiFiles.forEach(msiFile => {
+          const sourcePath = path.join(msiDir, msiFile)
+          const targetPath = path.join(buildConfig.options.outputRoot, msiFile)
+          execSync(`cp "${sourcePath}" "${targetPath}"`)
+          logSuccess(`已复制 MSI 安装程序: ${msiFile}`)
+          artifactsCopied = true
+        })
+      }
+
+      // 如果没有找到安装程序，查找可执行文件
+      if (!artifactsCopied) {
+        logWarning('未找到安装程序，尝试查找可执行文件...')
+        const releaseDir = path.dirname(config.sourceDir)
+        if (fs.existsSync(releaseDir)) {
+          const exeFiles = fs.readdirSync(releaseDir).filter(
+            file => file.endsWith('.exe') && !file.includes('-') // 排除临时文件
+          )
+          exeFiles.forEach(exeFile => {
+            const sourcePath = path.join(releaseDir, exeFile)
+            const targetPath = path.join(buildConfig.options.outputRoot, exeFile)
+            execSync(`cp "${sourcePath}" "${targetPath}"`)
+            logSuccess(`已复制可执行文件: ${exeFile}`)
+            artifactsCopied = true
+          })
+        }
+      }
+
+      if (!artifactsCopied) {
+        logWarning(`${platformName}: 未找到任何构建产物`)
+        // 列出实际的目录结构用于调试
+        if (fs.existsSync(config.sourceDir)) {
+          logStep('DEBUG', `${config.sourceDir} 目录内容:`)
+          try {
+            const contents = execSync(`find "${config.sourceDir}" -type f`, { encoding: 'utf8' })
+            console.log(contents)
+          } catch (error) {
+            logWarning('无法列出目录内容')
+          }
+        }
       }
     } else if (platformName.startsWith('linux')) {
       // Linux: 复制 .deb, .rpm, .AppImage 文件
@@ -584,9 +635,9 @@ function getProjectVersion() {
     const packageJsonPath = path.join(PROJECT_ROOT, 'package.json')
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
     return packageJson.version || '0.0.1'
-  } catch (error) {
-    logWarning('无法读取版本号，使用默认版本 0.0.1')
-    return '0.0.1'
+} catch (error) {
+  logWarning('无法读取版本号，使用默认版本 0.0.1')
+  return '0.0.1'
   }
 }
 
@@ -728,7 +779,7 @@ function processAndroidArtifacts(platformName, config) {
 
 // 按平台类型分组构建
 function buildByPlatformType(platformType) {
-  const platforms = Object.entries(buildConfig.targets).filter(
+  let platforms = Object.entries(buildConfig.targets).filter(
     ([_, config]) => config.platform === platformType
   )
 
@@ -752,16 +803,16 @@ function showHelp() {
   )
   const mobilePlatforms = platforms.filter(name => buildConfig.targets[name].platform === 'mobile')
 
-  console.log('\n🚀 Tauri 多平台构建工具')
+  console.log('\n🚀 Tauri 本地构建工具')
   console.log('\n用法:')
   console.log('  node scripts/build.js [平台名称|平台类型]')
   console.log('\n平台类型:')
-  console.log('  desktop    - 构建所有桌面平台')
-  console.log('  mobile     - 构建所有移动平台')
+  console.log('  desktop    - 构建当前系统桌面应用')
+  console.log('  mobile     - 构建移动平台应用')
   console.log('\n可用平台:')
 
   if (desktopPlatforms.length > 0) {
-    console.log('  桌面平台:', desktopPlatforms.join(', '))
+    console.log('  桌面平台:', desktopPlatforms.join(', '), '(当前系统)')
   }
 
   if (mobilePlatforms.length > 0) {
@@ -770,9 +821,11 @@ function showHelp() {
 
   console.log('\n示例:')
   console.log('  node scripts/build.js                    # 构建所有平台')
-  console.log('  node scripts/build.js desktop            # 构建所有桌面平台')
-  console.log('  node scripts/build.js mobile             # 构建所有移动平台')
-  console.log('  node scripts/build.js mac-x86            # 构建指定平台')
+  console.log('  node scripts/build.js desktop            # 构建当前系统桌面应用')
+  console.log('  node scripts/build.js mobile             # 构建移动平台应用')
+  console.log('  node scripts/build.js current-desktop    # 构建当前系统桌面应用')
+  console.log('')
+  console.log('注意: PC端跨平台构建已通过GitHub Actions处理，本地只需构建当前系统版本')
   console.log('')
 }
 
@@ -787,7 +840,7 @@ function main() {
     return
   }
 
-  log('🚀 Tauri 多平台构建工具', 'bright')
+  log('🚀 Tauri 本地构建工具', 'bright')
   log('================================', 'blue')
 
   try {
