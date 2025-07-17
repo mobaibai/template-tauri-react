@@ -296,8 +296,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 添加 aarch64-unknown-linux-gnu 支持
-        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu]
+        target: [x86_64-unknown-linux-gnu]
+        # aarch64-unknown-linux-gnu 交叉编译环境复杂，暂时禁用
+        # 参考: https://v1.tauri.app/v1/guides/building/cross-platform/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -349,29 +350,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf pkg-config libssl-dev
 
-          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            echo "=== 安装 aarch64 交叉编译工具链 ==="
-            sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
-
-            # 安装 aarch64 系统库依赖
-            sudo apt-get install -y libwebkit2gtk-4.1-dev:arm64 libappindicator3-dev:arm64 librsvg2-dev:arm64 libssl-dev:arm64 || true
-            sudo apt-get install -y libdbus-1-dev:arm64 libglib2.0-dev:arm64 libgtk-3-dev:arm64 || true
-
-            # 验证工具链安装
-            echo "=== 验证交叉编译工具链 ==="
-            which aarch64-linux-gnu-gcc
-            aarch64-linux-gnu-gcc --version
-            which aarch64-linux-gnu-g++
-            aarch64-linux-gnu-g++ --version
-
-            # 检查 pkg-config 路径
-            ls -la /usr/lib/aarch64-linux-gnu/pkgconfig/ || echo "aarch64 pkgconfig directory not found"
-
-            # 设置 pkg-config 搜索路径
-            export PKG_CONFIG_PATH="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig"
-            echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
-          fi
-
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
@@ -393,33 +371,7 @@ jobs:
 
       - name: Build Tauri app
         continue-on-error: false
-        run: |
-          if [ "${{ matrix.target }}" = "x86_64-unknown-linux-gnu" ]; then
-            pnpm run build:linux-x86
-          else
-            # 为 aarch64 交叉编译设置详细的环境变量
-            export CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc
-            export CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++
-            export AR_aarch64_unknown_linux_gnu=aarch64-linux-gnu-ar
-            export STRIP_aarch64_unknown_linux_gnu=aarch64-linux-gnu-strip
-            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
-            export PKG_CONFIG_ALLOW_CROSS=1
-            export PKG_CONFIG_PATH_aarch64_unknown_linux_gnu=/usr/lib/aarch64-linux-gnu/pkgconfig
-
-            # 调试信息
-            echo "=== 交叉编译环境检查 ==="
-            which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found"
-            aarch64-linux-gnu-gcc --version || echo "aarch64-linux-gnu-gcc version check failed"
-            echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=$CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER"
-            echo "=== 开始构建 ==="
-
-            pnpm run build:linux-aarch
-          fi
-        env:
-          PKG_CONFIG_ALLOW_CROSS: 1
-          # 使用vendored OpenSSL避免交叉编译依赖问题
-          OPENSSL_STATIC: 1
-          OPENSSL_VENDORED: 1
+        run: pnpm run build:linux-x86
 
       - name: Create dist-builds directory if not exists
         run: |
@@ -429,7 +381,7 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-${{ matrix.target }}
+          name: linux-x86_64
           path: dist-builds/
           retention-days: 3
         if: always()
@@ -536,13 +488,9 @@ jobs:
           #   pattern: '*.exe'
           #   name: 'Windows-ARM64'
           #   build_job: 'build-windows'
-          - artifact: linux-x86_64-unknown-linux-gnu
+          - artifact: linux-x86_64
             pattern: '*.{AppImage,deb,rpm}'
             name: 'Linux-x64'
-            build_job: 'build-linux'
-          - artifact: linux-aarch64-unknown-linux-gnu
-            pattern: '*.{AppImage,deb,rpm}'
-            name: 'Linux-ARM64'
             build_job: 'build-linux'
     steps:
       - name: Check if build succeeded
