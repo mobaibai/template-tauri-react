@@ -516,9 +516,9 @@ function copyBuildArtifacts(platformName, config) {
     } else if (platformName.startsWith('win')) {
       // Windows: 复制安装程序文件
       logStep('COPY', `查找 ${platformName} 构建产物...`)
-      
+
       let artifactsCopied = false
-      
+
       // 优先查找 NSIS 安装程序 (.exe)
       const nsisDir = path.join(config.sourceDir, 'nsis')
       if (fs.existsSync(nsisDir)) {
@@ -531,7 +531,7 @@ function copyBuildArtifacts(platformName, config) {
           artifactsCopied = true
         })
       }
-      
+
       // 查找 MSI 安装程序
       const msiDir = path.join(config.sourceDir, 'msi')
       if (fs.existsSync(msiDir)) {
@@ -544,14 +544,14 @@ function copyBuildArtifacts(platformName, config) {
           artifactsCopied = true
         })
       }
-      
+
       // 如果没有找到安装程序，查找可执行文件
       if (!artifactsCopied) {
         logWarning('未找到安装程序，尝试查找可执行文件...')
         const releaseDir = path.dirname(config.sourceDir)
         if (fs.existsSync(releaseDir)) {
-          const exeFiles = fs.readdirSync(releaseDir).filter(file => 
-            file.endsWith('.exe') && !file.includes('-') // 排除临时文件
+          const exeFiles = fs.readdirSync(releaseDir).filter(
+            file => file.endsWith('.exe') && !file.includes('-') // 排除临时文件
           )
           exeFiles.forEach(exeFile => {
             const sourcePath = path.join(releaseDir, exeFile)
@@ -562,7 +562,7 @@ function copyBuildArtifacts(platformName, config) {
           })
         }
       }
-      
+
       if (!artifactsCopied) {
         logWarning(`${platformName}: 未找到任何构建产物`)
         // 列出实际的目录结构用于调试

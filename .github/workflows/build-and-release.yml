@@ -277,7 +277,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "=== Checking build output directories ==="
-          
+
           # 检查主要的构建目录
           $targetDir = "src-tauri/target/${{ matrix.target }}"
           if (Test-Path $targetDir) {
@@ -286,7 +286,7 @@ jobs:
           } else {
             Write-Host "Directory $targetDir does not exist"
           }
-          
+
           # 检查 bundle 目录
           $bundleDir = "$targetDir/release/bundle"
           if (Test-Path $bundleDir) {
@@ -295,13 +295,13 @@ jobs:
           } else {
             Write-Host "Directory $bundleDir does not exist"
           }
-          
+
           # 检查是否有 .exe 文件
           Write-Host "`n=== Looking for .exe files ==="
           Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.exe" | ForEach-Object {
             Write-Host "Found: $($_.FullName)"
           }
-          
+
           # 检查是否有 .msi 文件
           Write-Host "`n=== Looking for .msi files ==="
           Get-ChildItem -Path "src-tauri/target" -Recurse -Filter "*.msi" | ForEach-Object {
@@ -316,13 +316,13 @@ jobs:
           if (-not (Test-Path "dist-builds")) {
             New-Item -ItemType Directory -Path "dist-builds" -Force
           }
-          
+
           # 查找并复制构建产物
           $targetDir = "src-tauri/target/${{ matrix.target }}/release"
           $bundleDir = "$targetDir/bundle"
-          
+
           Write-Host "Searching for build artifacts..."
-          
+
           # 查找 .exe 安装程序（通常在 bundle/nsis 目录）
           $nsisDir = "$bundleDir/nsis"
           if (Test-Path $nsisDir) {
@@ -332,7 +332,7 @@ jobs:
               Write-Host "Copied installer: $($_.Name) -> $destPath"
             }
           }
-          
+
           # 查找 .msi 安装程序（通常在 bundle/msi 目录）
           $msiDir = "$bundleDir/msi"
           if (Test-Path $msiDir) {
@@ -342,7 +342,7 @@ jobs:
               Write-Host "Copied installer: $($_.Name) -> $destPath"
             }
           }
-          
+
           # 如果没有找到安装程序，尝试复制可执行文件
           if (-not (Get-ChildItem -Path "dist-builds" -ErrorAction SilentlyContinue)) {
             Write-Host "No installers found, looking for executable files..."
@@ -352,7 +352,7 @@ jobs:
               Write-Host "Copied executable: $($_.Name) -> $destPath"
             }
           }
-          
+
           # 显示最终结果
           Write-Host "`nFinal contents of dist-builds:"
           if (Test-Path "dist-builds") {

@@ -348,8 +348,6 @@ target
    rustup target add aarch64-pc-windows-msvc
    ```
 
-
-
 ### Issue 2: Code Signing Issues
 
 **Symptoms:** Application cannot be properly signed or distributed
