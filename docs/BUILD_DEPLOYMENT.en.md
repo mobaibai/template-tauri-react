@@ -261,7 +261,8 @@ incremental = true
 
 ## Local Build
 
-> **Important**: Cross-platform builds are handled by GitHub Actions. Local development only needs to build for current system.
+> **Important**: Cross-platform builds are handled by GitHub Actions. Local
+> development only needs to build for current system.
 
 ### Local Development Build
 
@@ -274,7 +275,9 @@ npm run build:tauri
 
 ### GitHub Actions Automated Build
 
-The project uses GitHub Actions for automated cross-platform builds. When you push a tag or manually trigger the workflow, it will automatically build for all supported platforms (Windows, macOS, Linux).
+The project uses GitHub Actions for automated cross-platform builds. When you
+push a tag or manually trigger the workflow, it will automatically build for all
+supported platforms (Windows, macOS, Linux).
 
 ## Mobile Platform Build
 

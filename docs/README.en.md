@@ -165,10 +165,13 @@ For detailed instructions, see [GitHub Actions Guide](GITHUB_ACTIONS.en.md)
 
 ### Core Documentation
 
-- [Environment Setup Guide](ENVIRONMENT_SETUP.en.md) - Detailed environment configuration instructions
-- [Development Guide](DEVELOPMENT_GUIDE.en.md) - Development workflow, API reference and troubleshooting
-- [Build & Deployment Guide](BUILD_DEPLOYMENT.en.md) - Local build, CI/CD and mobile deployment
->>>>>>> dev
+- [Environment Setup Guide](ENVIRONMENT_SETUP.en.md) - Detailed environment
+  configuration instructions
+- [Development Guide](DEVELOPMENT_GUIDE.en.md) - Development workflow, API
+  reference and troubleshooting
+- [Build & Deployment Guide](BUILD_DEPLOYMENT.en.md) - Local build, CI/CD and
+  mobile deployment
+  > > > > > > > dev
 
 ### Chinese Documentation
 

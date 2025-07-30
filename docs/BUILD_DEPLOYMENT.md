@@ -261,7 +261,8 @@ incremental = true
 
 ### 当前系统构建
 
-由于项目已配置 GitHub Actions 进行自动化构建和发布，本地开发环境只需要支持当前系统的构建即可：
+由于项目已配置 GitHub
+Actions 进行自动化构建和发布，本地开发环境只需要支持当前系统的构建即可：
 
 ```bash
 # 构建当前系统的桌面应用
@@ -269,6 +270,7 @@ npm run build:tauri
 ```
 
 > **📝 说明**：
+>
 > - GitHub Actions 会自动处理 Windows、macOS、Linux 的跨平台构建
 > - 本地开发只需要关注当前系统的构建和调试
 > - 这样可以显著减少本地构建时间和复杂度
@@ -280,11 +282,13 @@ npm run build:tauri
 #### 🔧 环境配置
 
 **前置要求**:
+
 - Android SDK
 - Android NDK
 - Java Development Kit (JDK) 8+
 
 **环境变量设置**:
+
 ```bash
 export ANDROID_HOME="$HOME/Library/Android/sdk"
 export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/26.1.10909125"
@@ -292,6 +296,7 @@ export PATH="$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK
 ```
 
 **验证环境**:
+
 ```bash
 npm run check:env
 ```
@@ -299,11 +304,13 @@ npm run check:env
 #### 🏗️ 构建流程
 
 **自动化构建（推荐）**:
+
 ```bash
 npm run build:android
 ```
 
 此命令会自动完成：
+
 - 构建 Android APK
 - 自动进行调试签名
 - 按版本号和架构重命名文件
@@ -311,6 +318,7 @@ npm run build:android
 - 清理构建缓存
 
 **手动签名（可选）**:
+
 ```bash
 npm run sign:android
 ```
@@ -318,23 +326,27 @@ npm run sign:android
 #### 📦 构建产物
 
 **文件位置**:
+
 - **最终APK**: `dist-builds/template-tauri-react_版本号_架构.apk`
 - **最终AAB**: `dist-builds/template-tauri-react_版本号_架构.aab`
 - **调试密钥库**: `debug.keystore`（项目根目录）
 
 **命名格式**:
+
 - APK: `template-tauri-react_0.0.1_universal.apk`
 - AAB: `template-tauri-react_0.0.1_universal.aab`
 
 #### 📱 安装到设备
 
 **启用开发者选项**:
+
 1. 进入 **设置** > **关于手机**
 2. 连续点击 **版本号** 7 次
 3. 返回设置，进入 **开发者选项**
 4. 启用 **USB 调试**
 
 **安装方法**:
+
 ```bash
 # 通过 ADB 安装
 adb install dist-builds/template-tauri-react_0.0.1_universal.apk
@@ -345,15 +357,18 @@ adb install dist-builds/template-tauri-react_0.0.1_universal.apk
 #### 🔍 故障排除
 
 **"无效安装包" 错误**:
+
 - 确保使用已签名的 APK 文件
 - 运行 `npm run sign:android` 重新签名
 
 **NDK 工具链错误**:
+
 - 检查 `ANDROID_NDK_ROOT` 环境变量
 - 验证 NDK 版本兼容性
 - 查看 `.cargo/config.toml` 配置
 
 **构建失败**:
+
 ```bash
 # 清理缓存
 npm run clean:all
@@ -619,11 +634,13 @@ zipalign -v 4 app-release-unsigned.apk app-release.apk
 ##### 📋 支持平台
 
 ###### 桌面平台（GitHub Actions 自动构建）
+
 - **macOS**: Intel (x86_64) 和 Apple Silicon (ARM64)
 - **Windows**: x86_64 和 ARM64
 - **Linux**: x86_64 和 ARM64 (AppImage, DEB, RPM)
 
 ###### 移动平台（需要本地配置）
+
 - **iOS**: 需要 macOS 环境和 Xcode
 - **Android**: 需要 Android SDK 和 NDK
 
@@ -667,11 +684,13 @@ git push origin v1.0.0
 - **Linux**: `.AppImage`、`.deb` 和 `.rpm` 包
 
 ###### 文件命名规则
+
 ```
 {应用名}-{版本号}-{平台标识}.{扩展名}
 ```
 
 示例：
+
 - `template-tauri-react-1.0.0-macOS-Intel.dmg`
 - `template-tauri-react-1.0.0-Windows-x64.exe`
 - `template-tauri-react-1.0.0-Linux-x64.AppImage`
@@ -679,9 +698,11 @@ git push origin v1.0.0
 ##### 🔒 安全配置
 
 ###### 必需的 Secrets
+
 - `GITHUB_TOKEN`: 自动提供，用于创建 Release
 
 ###### 可选的 Secrets（用于代码签名）
+
 - `APPLE_CERTIFICATE`: macOS 应用签名证书
 - `ANDROID_KEYSTORE`: Android 应用签名密钥
 

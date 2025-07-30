@@ -304,8 +304,6 @@ sudo pacman -S \
    adb devices
    ```
 
-
-
 ## 开发工具配置
 
 ### VS Code 配置

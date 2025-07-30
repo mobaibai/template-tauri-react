@@ -635,9 +635,9 @@ function getProjectVersion() {
     const packageJsonPath = path.join(PROJECT_ROOT, 'package.json')
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
     return packageJson.version || '0.0.1'
-} catch (error) {
-  logWarning('无法读取版本号，使用默认版本 0.0.1')
-  return '0.0.1'
+  } catch (error) {
+    logWarning('无法读取版本号，使用默认版本 0.0.1')
+    return '0.0.1'
   }
 }
 

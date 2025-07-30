@@ -192,9 +192,12 @@ git push origin v0.0.1
 ### 英文文档
 
 - [English README](docs/README.en.md) - English version of main documentation
-- [Environment Setup (EN)](docs/ENVIRONMENT_SETUP.en.md) - Environment configuration guide
-- [Development Guide (EN)](docs/DEVELOPMENT_GUIDE.en.md) - Development workflow and best practices
-- [Build & Deployment (EN)](docs/BUILD_DEPLOYMENT.en.md) - Local build and deployment guide
+- [Environment Setup (EN)](docs/ENVIRONMENT_SETUP.en.md) - Environment
+  configuration guide
+- [Development Guide (EN)](docs/DEVELOPMENT_GUIDE.en.md) - Development workflow
+  and best practices
+- [Build & Deployment (EN)](docs/BUILD_DEPLOYMENT.en.md) - Local build and
+  deployment guide
 
 ## 🤝 贡献
 

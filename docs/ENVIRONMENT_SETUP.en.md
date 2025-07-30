@@ -308,7 +308,8 @@ sudo pacman -S \
 
 ## Local Build Setup
 
-> **Note**: PC cross-platform builds are handled by GitHub Actions. Local setup only needs to support current system builds.
+> **Note**: PC cross-platform builds are handled by GitHub Actions. Local setup
+> only needs to support current system builds.
 
 2. **Install NSIS (for creating installers)**:
 

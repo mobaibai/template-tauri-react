@@ -75,8 +75,8 @@ export const ModelPage: React.FC<Props> = props => {
 }
 
 useGLTF.preload(RobotGlb)
-const RobotModel = (props: any) => {
-  const { nodes, materials } = useGLTF(RobotGlb) as any
+const RobotModel = (props: Record<string, any>) => {
+  const { nodes, materials } = useGLTF(RobotGlb) as Record<string, any>
 
   return (
     <group {...props} dispose={null}>

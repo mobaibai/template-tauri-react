@@ -860,7 +860,7 @@ interface FileReadResponse {
 }
 
 const response = await invoke<FileReadResponse>('read_file_content', {
-  request: { path: '/path/to/file.txt' }
+  request: { path: '/path/to/file.txt' },
 })
 
 // 写入文件
@@ -874,8 +874,8 @@ await invoke<void>('write_file_content', {
   request: {
     path: '/path/to/file.txt',
     content: 'Hello, World!',
-    create_dirs: true
-  }
+    create_dirs: true,
+  },
 })
 ```
 
@@ -895,7 +895,7 @@ interface UpdateTitleRequest {
 }
 
 await invoke<void>('update_window_title', {
-  request: { title: '新标题', window_label: 'main' }
+  request: { title: '新标题', window_label: 'main' },
 })
 ```
 
@@ -921,9 +921,9 @@ const response = await invoke<HttpResponse>('make_http_request', {
   config: {
     method: 'GET',
     url: 'https://api.example.com/data',
-    headers: { 'Authorization': 'Bearer token' },
-    timeout: 30000
-  }
+    headers: { Authorization: 'Bearer token' },
+    timeout: 30000,
+  },
 })
 ```
 
@@ -956,10 +956,10 @@ unlistenFile()
 #[tauri::command]
 pub async fn trigger_system_update(window: tauri::Window) -> Result<(), String> {
     let system_info = get_system_info();
-    
+
     window.emit("system-info-updated", &system_info)
         .map_err(|e| format!("发送事件失败: {}", e))?;
-    
+
     Ok(())
 }
 ```
@@ -1009,7 +1009,7 @@ export function useApiCall<T>(command: string, params?: any) {
   const execute = useCallback(async () => {
     setLoading(true)
     setError(null)
-    
+
     try {
       const result = await invoke<T>(command, params)
       setData(result)
@@ -1385,6 +1385,7 @@ npm run check:env:fix
 #### Android 开发问题
 
 **OpenSSL 编译错误**
+
 ```bash
 # 推荐方案：使用 rustls 替代 OpenSSL
 pnpm clean:all
@@ -1396,6 +1397,7 @@ export OPENSSL_DIR=/opt/homebrew/opt/openssl
 ```
 
 **模拟器检测失败**
+
 ```bash
 # 检查模拟器状态
 npm run emulator:status
@@ -1408,6 +1410,7 @@ npm run dev:android:safe
 ```
 
 **Rust 编译失败**
+
 ```bash
 # 安装 Android 目标
 rustup target add aarch64-linux-android
@@ -1421,6 +1424,7 @@ ls $ANDROID_HOME/ndk
 #### iOS 开发问题
 
 **Xcode 工具缺失**
+
 ```bash
 # 安装 Command Line Tools
 xcode-select --install
@@ -1430,6 +1434,7 @@ xcodebuild -version
 ```
 
 **模拟器问题**
+
 ```bash
 # 列出可用模拟器
 xcrun simctl list devices
@@ -1442,6 +1447,7 @@ open -a Simulator
 #### 前端开发问题
 
 **Node.js 版本问题**
+
 ```bash
 # 使用 nvm 管理版本
 nvm install --lts
@@ -1454,6 +1460,7 @@ npm install
 ```
 
 **Vite 服务器问题**
+
 ```bash
 # 检查端口占用
 lsof -i :1420
