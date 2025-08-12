@@ -49,7 +49,7 @@ export const useIpcData = ({
             const queryString = objectToQueryString(
               typeof params === 'object' && params !== null && !Array.isArray(params) ? params : {}
             )
-            const getUrl = queryString ? `${path}?${queryString}` : path
+            const getUrl = queryString ? `${path + queryString}` : path
             res = await get<DataType<ResponseDataListType | ItemType>>(getUrl)
             break
           }
