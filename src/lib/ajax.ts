@@ -23,7 +23,7 @@ type Options = {
  * @description: Ajax封装
  * @param {Options} options
  * @return {type}
- * @example:
+ * @example
  * const { get, post } = useAjax({ showLoading: true, handleError: true })
  * const resGet = await get<DataType<ResponseDataListType | ItemType>>('/api/get/test/list', { count: 10 })
  * const resPost = await post<DataType<ResponseDataListType | ItemType>>('/api/post/test/list', { count: 10 })

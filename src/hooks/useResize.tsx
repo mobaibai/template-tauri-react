@@ -14,7 +14,7 @@ type ResizeType = {
  * @description: 数据大屏适配
  * @param {ResizeType} options
  * @return {type}
- * @example:
+ * @example
  * const designWidth = 1875 // 设计稿宽度
  * const designHeight = 1044 // 设计稿高度
  * document.documentElement.style.setProperty('--design-width', `${designWidth}px`) // Css变量

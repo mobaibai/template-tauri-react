@@ -10,7 +10,7 @@ const Popup = lazy(() => import('@/components/Popup'))
  * @description: 弹窗
  * @param {PopupType} options
  * @return {type}
- * @example:
+ * @example
  * const { popup, show, hide, toggle } = usePopup({
     children: <div className='popup-content'>这是一个全局弹窗</div>
   })

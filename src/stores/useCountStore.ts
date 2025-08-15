@@ -9,7 +9,7 @@ interface Count {
  * @description: 使用数量状态
  * @param {type} create
  * @return {type}
- * @example:
+ * @example
  * const { count, inc, cut } = useCountStore()
  * --HTML--
  * <div className='count-container'>
