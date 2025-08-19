@@ -4,7 +4,7 @@ import { Modal } from 'antd'
 
 export interface PopupType {
   isOpen?: boolean
-  title?: string
+  title?: ReactNode
   maskClosable?: boolean
   width?: number
   className?: string
